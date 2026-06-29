@@ -204,6 +204,20 @@
   var netParticles = [];
   var PARTICLE_COUNT = 60;
   var CONNECTION_DIST = 140;
+  var MAX_SPEED = 0.5;   // Maximum particle speed
+  var CURSOR_RADIUS = 40; // Distance to trigger message
+
+  // Physics/science messages for particle hover
+  var MESSAGES = [
+    'E = mc²', '∇×B = μ₀J', 'F = ma', 'ΔS ≥ 0',
+    'ψ(x,t)', 'Ĥ|ψ⟩ = E|ψ⟩', '∇²φ = -ρ/ε₀',
+    'λ = h/p', 'iℏ∂ψ/∂t', 'S = k·ln(W)',
+    'pV = nRT', 'F = -kx', 'Δx·Δp ≥ ℏ/2',
+    'dS/dt ≥ 0', '∇·E = ρ/ε₀', 'c = 3×10⁸',
+  ];
+  var hoveredParticle = null;
+  var messageAlpha = 0;
+  var messageTimer = 0;
 
   function resizeParticleCanvas() {
     if (!particleCanvas || !particleCtx) return;
@@ -219,10 +233,15 @@
   function initNetParticles() {
     netParticles = [];
     for (var i = 0; i < PARTICLE_COUNT; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      var speed = Math.random() * 0.3 + 0.1;
       netParticles.push({
         x: Math.random() * pWidth, y: Math.random() * pHeight,
-        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
         r: Math.random() * 1.5 + 0.5,
+        message: MESSAGES[i % MESSAGES.length],
+        hovered: false,
+        hoverAlpha: 0,
       });
     }
   }
@@ -230,12 +249,51 @@
   function drawNetParticles() {
     if (!particleCtx) return;
     particleCtx.clearRect(0, 0, pWidth, pHeight);
+
+    // Get cursor position relative to particle canvas
+    var rect = particleCanvas.getBoundingClientRect();
+    var curX = cursorX - rect.left;
+    var curY = cursorY - rect.top;
+
+    // Find closest particle to cursor
+    hoveredParticle = null;
+    var minDist = CURSOR_RADIUS;
+
     for (var i = 0; i < netParticles.length; i++) {
       var p = netParticles[i];
+
+      // Update position
       p.x += p.vx; p.y += p.vy;
+
+      // Speed limit
+      var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      if (speed > MAX_SPEED) {
+        p.vx = (p.vx / speed) * MAX_SPEED;
+        p.vy = (p.vy / speed) * MAX_SPEED;
+      }
+
+      // Wrap around
       if (p.x < 0) p.x = pWidth; if (p.x > pWidth) p.x = 0;
       if (p.y < 0) p.y = pHeight; if (p.y > pHeight) p.y = 0;
+
+      // Check cursor proximity
+      var dx = curX - p.x;
+      var dy = curY - p.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < minDist) {
+        minDist = dist;
+        hoveredParticle = p;
+      }
+
+      // Smooth hover state
+      if (p === hoveredParticle) {
+        p.hoverAlpha = Math.min(1, p.hoverAlpha + 0.08);
+      } else {
+        p.hoverAlpha = Math.max(0, p.hoverAlpha - 0.04);
+      }
     }
+
+    // Draw connections
     for (var i = 0; i < netParticles.length; i++) {
       for (var j = i + 1; j < netParticles.length; j++) {
         var dx = netParticles[i].x - netParticles[j].x;
@@ -252,11 +310,63 @@
         }
       }
     }
+
+    // Draw dots + hover effects
     for (var i = 0; i < netParticles.length; i++) {
+      var p = netParticles[i];
+
+      // Glow when hovered
+      if (p.hoverAlpha > 0) {
+        particleCtx.save();
+        particleCtx.globalAlpha = p.hoverAlpha * 0.4;
+        particleCtx.shadowColor = '#3b82f6';
+        particleCtx.shadowBlur = 15;
+        particleCtx.fillStyle = '#3b82f6';
+        particleCtx.beginPath();
+        particleCtx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
+        particleCtx.fill();
+        particleCtx.restore();
+      }
+
+      // Normal dot
       particleCtx.beginPath();
-      particleCtx.arc(netParticles[i].x, netParticles[i].y, netParticles[i].r, 0, Math.PI * 2);
+      particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       particleCtx.fillStyle = 'rgba(59, 130, 246, 0.35)';
       particleCtx.fill();
+
+      // Message bubble
+      if (p.hoverAlpha > 0.1) {
+        particleCtx.save();
+        particleCtx.globalAlpha = p.hoverAlpha * 0.9;
+
+        // Background pill
+        var msgW = particleCtx.measureText(p.message).width + 12;
+        var msgH = 18;
+        var msgX = p.x - msgW / 2;
+        var msgY = p.y - p.r - msgH - 6;
+
+        particleCtx.fillStyle = 'rgba(6, 10, 20, 0.85)';
+        particleCtx.shadowColor = '#3b82f6';
+        particleCtx.shadowBlur = 8;
+        particleCtx.beginPath();
+        particleCtx.roundRect(msgX, msgY, msgW, msgH, 4);
+        particleCtx.fill();
+
+        // Border
+        particleCtx.shadowBlur = 0;
+        particleCtx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+        particleCtx.lineWidth = 0.5;
+        particleCtx.stroke();
+
+        // Text
+        particleCtx.fillStyle = '#60a5fa';
+        particleCtx.font = '11px "JetBrains Mono", monospace';
+        particleCtx.textAlign = 'center';
+        particleCtx.textBaseline = 'middle';
+        particleCtx.fillText(p.message, p.x, msgY + msgH / 2);
+
+        particleCtx.restore();
+      }
     }
   }
 
@@ -813,7 +923,14 @@
   // ============================================
   var langToggle = document.getElementById('lang-toggle');
   var langLabel = document.getElementById('lang-label');
-  var currentLang = 'en';
+  var currentLang = 'es';
+
+  // Apply Spanish on load
+  document.querySelectorAll('[data-en][data-es]').forEach(function (el) {
+    el.textContent = el.getAttribute('data-es');
+  });
+  if (langLabel) langLabel.textContent = 'EN';
+  document.documentElement.lang = 'es';
 
   if (langToggle) {
     langToggle.addEventListener('click', function () {
@@ -875,7 +992,7 @@
     cvBtn.addEventListener('click', function (e) {
       e.preventDefault();
       // Replace with actual CV file URL when ready
-      alert('CV download coming soon! Contact me at github.com/MiniLux0 for now.');
+      alert('¡CV próximamente! Contáctame en github.com/MiniLux0 por ahora.');
     });
   }
 
