@@ -7,6 +7,7 @@
 
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  var typingTimer = null;
 
   // ============================================
   // Custom Cursor — Canvas Particle Trail
@@ -793,41 +794,7 @@
   }
 
 
-  // ============================================
-  // Hero Typing Effect
-  // ============================================
-  var subtitleEl = document.querySelector('.hero__subtitle');
-  if (subtitleEl && !prefersReducedMotion) {
-    var fullText = subtitleEl.textContent;
-    subtitleEl.textContent = '';
-    var cursorSpan = document.createElement('span');
-    cursorSpan.className = 'typing-cursor';
-    subtitleEl.appendChild(cursorSpan);
 
-    var charIdx = 0;
-    function typeNext() {
-      if (charIdx < fullText.length) {
-        if (cursorSpan && cursorSpan.parentNode === subtitleEl) {
-          subtitleEl.insertBefore(
-            document.createTextNode(fullText.charAt(charIdx)),
-            cursorSpan
-          );
-        } else {
-          subtitleEl.appendChild(document.createTextNode(fullText.charAt(charIdx)));
-        }
-        charIdx++;
-        setTimeout(typeNext, 50);
-      } else {
-        // Remove cursor after typing finishes
-        setTimeout(function () {
-          cursorSpan.style.animation = 'none';
-          cursorSpan.style.opacity = '0';
-        }, 2000);
-      }
-    }
-    // Start typing after a short delay
-    setTimeout(typeNext, 800);
-  }
 
 
   // ============================================
@@ -1040,6 +1007,10 @@
 
   if (langToggle) {
     langToggle.addEventListener('click', function () {
+      if (typingTimer) {
+        clearTimeout(typingTimer);
+        typingTimer = null;
+      }
       currentLang = currentLang === 'en' ? 'es' : 'en';
       if (langLabel) langLabel.textContent = currentLang === 'en' ? 'ES' : 'EN';
 
@@ -1135,6 +1106,44 @@
       });
       blogObserver.observe(blogGrid);
     }
+  }
+
+  // ============================================
+  // Hero Typing Effect
+  // ============================================
+  var subtitleEl = document.querySelector('.hero__subtitle');
+  if (subtitleEl && !prefersReducedMotion) {
+    var fullText = subtitleEl.textContent;
+    subtitleEl.textContent = '';
+    var cursorSpan = document.createElement('span');
+    cursorSpan.className = 'typing-cursor';
+    subtitleEl.appendChild(cursorSpan);
+
+    var charIdx = 0;
+    function typeNext() {
+      if (charIdx < fullText.length) {
+        if (cursorSpan && cursorSpan.parentNode === subtitleEl) {
+          subtitleEl.insertBefore(
+            document.createTextNode(fullText.charAt(charIdx)),
+            cursorSpan
+          );
+        } else {
+          subtitleEl.appendChild(document.createTextNode(fullText.charAt(charIdx)));
+        }
+        charIdx++;
+        typingTimer = setTimeout(typeNext, 50);
+      } else {
+        // Remove cursor after typing finishes
+        typingTimer = setTimeout(function () {
+          if (cursorSpan && cursorSpan.parentNode === subtitleEl) {
+            cursorSpan.style.animation = 'none';
+            cursorSpan.style.opacity = '0';
+          }
+        }, 2000);
+      }
+    }
+    // Start typing after a short delay
+    typingTimer = setTimeout(typeNext, 800);
   }
 
 })();
