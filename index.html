@@ -51,7 +51,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Three.js via ES Module importmap -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+      "three/examples/jsm/postprocessing/EffectComposer.js": "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js",
+      "three/examples/jsm/postprocessing/RenderPass.js": "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js",
+      "three/examples/jsm/postprocessing/UnrealBloomPass.js": "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js",
+      "three/examples/jsm/postprocessing/Pass.js": "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/Pass.js",
+      "three/examples/jsm/shaders/LuminosityHighPassShader.js": "https://unpkg.com/three@0.128.0/examples/jsm/shaders/LuminosityHighPassShader.js",
+      "three/examples/jsm/shaders/CopyShader.js": "https://unpkg.com/three@0.128.0/examples/jsm/shaders/CopyShader.js"
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -285,6 +299,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
 
+  <script type="module" src="js/atom.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
