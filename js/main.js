@@ -8,6 +8,8 @@
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
   var typingTimer = null;
+  var heroMouseX = 0, heroMouseY = 0;
+  var heroTargetX = 0, heroTargetY = 0;
 
   // ============================================
   // Custom Cursor — Canvas Particle Trail
@@ -152,9 +154,9 @@
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
     var waveRGB = isLight ? '0, 0, 0' : '255, 255, 255';
     var layers = [
-      { amp: 126, freq: 0.006, speed: 0.0006, alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 1 (amp+40%)
-      { amp: 91,  freq: 0.01,  speed: 0.001,  alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 2 (amp+40%)
-      { amp: 75,  freq: 0.008, speed: 0.0014, alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 3 (new speed/phase)
+      { amp: wHeight * 0.60, freq: 0.006, speed: 0.0006, alpha: 0.22, width: 2.2, phase: 0, color: waveRGB },
+      { amp: wHeight * 0.42, freq: 0.01,  speed: 0.001,  alpha: 0.22, width: 2.2, phase: Math.PI * 0.3, color: waveRGB },
+      { amp: wHeight * 0.32, freq: 0.008, speed: 0.00035, alpha: 0.22, width: 2.2, phase: Math.PI * 0.7, color: waveRGB },
     ];
 
     layers.forEach(function (layer) {
@@ -164,10 +166,11 @@
       waveCtx.shadowColor = 'rgba(' + layer.color + ', 0.3)';
       waveCtx.shadowBlur = 8;
       for (var x = 0; x <= wWidth; x += 2) {
+        var phase = layer.phase || 0;
         var y = centerY
-          + Math.sin(x * layer.freq + time * layer.speed) * layer.amp * mouseAmpMod
-          + Math.sin(x * layer.freq * 0.5 + time * layer.speed * 1.5) * layer.amp * 0.35
-          + Math.sin(x * layer.freq * 2.5 + time * layer.speed * 0.7) * layer.amp * 0.12
+          + Math.sin(x * layer.freq + time * layer.speed + phase) * layer.amp * mouseAmpMod
+          + Math.sin(x * layer.freq * 0.5 + time * layer.speed * 1.5 + phase) * layer.amp * 0.35
+          + Math.sin(x * layer.freq * 2.5 + time * layer.speed * 0.7 + phase) * layer.amp * 0.12
           + mouseOffset * Math.sin(x * 0.003 + time * 0.0003);
         if (x === 0) waveCtx.moveTo(x, y);
         else waveCtx.lineTo(x, y);
@@ -240,10 +243,11 @@
       netParticles.push({
         x: Math.random() * pWidth, y: Math.random() * pHeight,
         vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        r: Math.random() * 2.0 + 1.5,
+        r: Math.random() * 1.6 + 2.0, // average 2.8px
         message: MESSAGES[i % MESSAGES.length],
         hovered: false,
         hoverAlpha: 0,
+        offset: Math.random() * Math.PI * 2,
       });
     }
   }
@@ -261,11 +265,15 @@
     hoveredParticle = null;
     var minDist = CURSOR_RADIUS;
 
+    var speedMult = 1 + heroMouseX * 0.3;
+    var t = performance.now() * 0.001;
+
     for (var i = 0; i < netParticles.length; i++) {
       var p = netParticles[i];
 
-      // Update position
-      p.x += p.vx; p.y += p.vy;
+      // Update position with speed modifier and sinusoidal vertical wave
+      p.x += p.vx * speedMult;
+      p.y += p.vy * speedMult + Math.sin(t + p.offset) * 0.3;
 
       // Speed limit
       var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
@@ -297,18 +305,18 @@
 
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
-    // Draw connections
+    // Draw connections (with 0.28 connection line opacity)
     for (var i = 0; i < netParticles.length; i++) {
       for (var j = i + 1; j < netParticles.length; j++) {
         var dx = netParticles[i].x - netParticles[j].x;
         var dy = netParticles[i].y - netParticles[j].y;
         var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < CONNECTION_DIST) {
-          var alpha = (1 - dist / CONNECTION_DIST) * 0.25;
+          var alpha = (1 - dist / CONNECTION_DIST) * 0.28;
           particleCtx.beginPath();
           particleCtx.moveTo(netParticles[i].x, netParticles[i].y);
           particleCtx.lineTo(netParticles[j].x, netParticles[j].y);
-          particleCtx.strokeStyle = isLight ? 'rgba(26, 26, 26, ' + (alpha * 1.8) + ')' : 'rgba(192, 192, 192, ' + alpha + ')';
+          particleCtx.strokeStyle = isLight ? 'rgba(26, 26, 26, ' + (alpha * 1.8) + ')' : 'rgba(255, 255, 255, ' + alpha + ')';
           particleCtx.lineWidth = 0.6;
           particleCtx.stroke();
         }
@@ -335,7 +343,7 @@
       // Normal dot
       particleCtx.beginPath();
       particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      particleCtx.fillStyle = isLight ? 'rgba(26, 26, 26, 0.85)' : 'rgba(192, 192, 192, 0.65)';
+      particleCtx.fillStyle = isLight ? 'rgba(26, 26, 26, 0.85)' : 'rgba(255, 255, 255, 0.7)';
       particleCtx.fill();
 
       // Message bubble
@@ -736,6 +744,24 @@
 
   function animateAll(time) {
     if (heroActive) {
+      // Lerp hero parallax at 6%
+      heroMouseX += (heroTargetX - heroMouseX) * 0.06;
+      heroMouseY += (heroTargetY - heroMouseY) * 0.06;
+
+      var heroName = document.querySelector('.hero__name');
+      var heroSubtitle = document.querySelector('.hero__subtitle');
+      var waveCanvasEl = document.getElementById('wave-canvas');
+
+      if (heroName) {
+        heroName.style.transform = 'translate(' + (heroMouseX * -15) + 'px, ' + (heroMouseY * -10) + 'px)';
+      }
+      if (heroSubtitle) {
+        heroSubtitle.style.transform = 'translate(' + (heroMouseX * -8) + 'px, ' + (heroMouseY * -6) + 'px)';
+      }
+      if (waveCanvasEl) {
+        waveCanvasEl.style.transform = 'translate(' + (heroMouseX * 20) + 'px, ' + (heroMouseY * 12) + 'px)';
+      }
+
       drawWave(time);
       drawNetParticles();
     }
@@ -759,33 +785,21 @@
         });
       }, { threshold: 0.05 });
       heroObserver.observe(heroSection);
+
+      heroSection.addEventListener('mousemove', function (e) {
+        heroTargetX = (e.clientX - window.innerWidth / 2) / window.innerWidth;
+        heroTargetY = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+      });
+
+      heroSection.addEventListener('mouseleave', function () {
+        heroTargetX = 0;
+        heroTargetY = 0;
+      });
     }
+
     document.addEventListener('mousemove', function (e) {
       mouseX = e.clientX / window.innerWidth;
       mouseY = e.clientY / window.innerHeight;
-
-      // Parallax in the hero section (depth effect up to 15px)
-      var cx = e.clientX - window.innerWidth / 2;
-      var cy = e.clientY - window.innerHeight / 2;
-      var dx = cx / (window.innerWidth / 2);
-      var dy = cy / (window.innerHeight / 2);
-
-      var bgX = -15 * dx;
-      var bgY = -15 * dy;
-      var textX = -6 * dx;
-      var textY = -6 * dy;
-
-      var waveCanvas = document.getElementById('wave-canvas');
-      var particleCanvas = document.getElementById('particle-canvas');
-      var heroContent = document.querySelector('.hero__content');
-      var heroGrid = document.querySelector('.hero__grid');
-      var heroAurora = document.querySelector('.hero__aurora-wrap');
-
-      if (waveCanvas) waveCanvas.style.transform = 'translate(' + bgX + 'px, ' + bgY + 'px)';
-      if (particleCanvas) particleCanvas.style.transform = 'translate(' + bgX + 'px, ' + bgY + 'px)';
-      if (heroGrid) heroGrid.style.transform = 'translate(' + (bgX * 0.5) + 'px, ' + (bgY * 0.5) + 'px)';
-      if (heroAurora) heroAurora.style.transform = 'translate(' + (bgX * 0.8) + 'px, ' + (bgY * 0.8) + 'px)';
-      if (heroContent) heroContent.style.transform = 'translate(' + textX + 'px, ' + textY + 'px)';
     });
     animateAll(0);
   } else {
