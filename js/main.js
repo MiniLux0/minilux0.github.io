@@ -262,7 +262,320 @@
 
 
   // ============================================
-  // Animation Loop
+  // 3D Atom — Three.js (Global, No Modules)
+  // ============================================
+  (function initAtom() {
+    var canvas = document.getElementById('atom-canvas');
+    if (!canvas || typeof THREE === 'undefined') {
+      console.warn('[Atom] THREE not loaded or canvas missing');
+      return;
+    }
+    console.log('[Atom] THREE loaded, initializing...');
+
+    var SIZE = 400;
+    var TRAIL_LEN = 24;
+
+    // Orbit definitions
+    var ORBITS = [
+      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            baseSpeed: 0.40, color: 0x3b82f6 },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  baseSpeed: 0.55, color: 0x38bdf8 },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, baseSpeed: 0.35, color: 0x60a5fa },
+    ];
+
+    var LABELS = [
+      { orbit: 0, angle: 0.8 },
+      { orbit: 1, angle: 2.5 },
+      { orbit: 2, angle: 4.2 },
+    ];
+
+    // State
+    var renderer, scene, camera;
+    var electrons = [], orbitRings = [], labelEls = [], nucleusMesh = null, glowShells = [];
+    var drag = { active: false, sx: 0, sy: 0 };
+    var targetRot = { x: 0, y: 0 };
+    var mouse = { x: 0, y: 0 };
+    var pulseTime = -1, pulsePhase = 0;
+    var PULSE_DUR = 1.2;
+
+    // ── Create renderer ─────────────────────────
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(SIZE, SIZE);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+
+    scene  = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 0, 7);
+    camera.lookAt(0, 0, 0);
+
+    // ── Lighting ────────────────────────────────
+    scene.add(new THREE.AmbientLight(0x0a1628, 0.6));
+    var keyLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+    keyLight.position.set(3, 4, 5);
+    scene.add(keyLight);
+    var rimLight = new THREE.DirectionalLight(0x14b8a6, 0.2);
+    rimLight.position.set(-2, -3, 2);
+    scene.add(rimLight);
+
+    // ── Nucleus (layered glow) ──────────────────
+    nucleusMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 32, 32),
+      new THREE.MeshStandardMaterial({
+        color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 1.2,
+        metalness: 0.3, roughness: 0.4,
+      })
+    );
+    scene.add(nucleusMesh);
+
+    // Glow shells (additive blending for bloom-like effect)
+    function addShell(r, op) {
+      var m = new THREE.Mesh(
+        new THREE.SphereGeometry(r, 32, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0x3b82f6, transparent: true, opacity: op,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        })
+      );
+      scene.add(m);
+      glowShells.push(m);
+    }
+    addShell(0.35, 0.15);
+    addShell(0.55, 0.06);
+
+    scene.add(new THREE.PointLight(0x3b82f6, 2.5, 6));
+
+    // ── Orbits + Electrons + Trails ─────────────
+    ORBITS.forEach(function (cfg, oi) {
+      // Orbit ring
+      var curve  = new THREE.EllipseCurve(0, 0, cfg.rx, cfg.ry, 0, Math.PI * 2, false, 0);
+      var pts2D  = curve.getPoints(160);
+      var path3D = new THREE.CatmullRomCurve3(
+        pts2D.map(function (p) { return new THREE.Vector3(p.x, p.y, 0); }), true
+      );
+      var ring = new THREE.Mesh(
+        new THREE.TubeGeometry(path3D, 160, 0.008, 6, true),
+        new THREE.MeshBasicMaterial({
+          color: cfg.color, transparent: true, opacity: 0.22,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        })
+      );
+      ring.rotation.x = cfg.rotX;
+      ring.rotation.z = cfg.rotZ;
+      scene.add(ring);
+      orbitRings.push({ mesh: ring, baseRotX: cfg.rotX, baseRotZ: cfg.rotZ, oi: oi });
+
+      // 3 electrons per orbit
+      for (var e = 0; e < 3; e++) {
+        var eMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff, emissive: cfg.color, emissiveIntensity: 1.0,
+          metalness: 0.1, roughness: 0.3,
+        });
+        var electron = new THREE.Mesh(new THREE.SphereGeometry(0.065, 16, 16), eMat);
+        electron.add(new THREE.PointLight(cfg.color, 0.6, 1.5));
+        scene.add(electron);
+
+        // Trail buffer (per-vertex color with alpha)
+        var tPos   = new Float32Array(TRAIL_LEN * 3);
+        var tColor = new Float32Array(TRAIL_LEN * 4);
+        var tGeo   = new THREE.BufferGeometry();
+        tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+        tGeo.setAttribute('color',    new THREE.BufferAttribute(tColor, 4));
+        tGeo.setDrawRange(0, 0);
+        var trail = new THREE.Line(tGeo, new THREE.LineBasicMaterial({
+          vertexColors: true, transparent: true,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        }));
+        scene.add(trail);
+
+        var seed = oi * 100 + e * 37 + 13;
+        electrons.push({
+          mesh: electron, trail: trail, tPos: tPos, tColor: tColor, tCount: 0,
+          rx: cfg.rx, ry: cfg.ry,
+          rotX: cfg.rotX, rotZ: cfg.rotZ,
+          baseSpeed: cfg.baseSpeed,
+          offset: (e / 3) * Math.PI * 2,
+          seed: seed,
+          rPertFreq1: 0.7 + Math.random() * 0.6,
+          rPertAmp1:  0.08 + Math.random() * 0.07,
+          rPertFreq2: 1.3 + Math.random() * 0.8,
+          rPertAmp2:  0.04 + Math.random() * 0.04,
+          speedVarFreq: 0.5 + Math.random() * 0.4,
+          speedVarAmp:  0.12 + Math.random() * 0.08,
+          trailFlicker: 0.8 + Math.random() * 0.4,
+        });
+      }
+    });
+
+    // ── Labels ──────────────────────────────────
+    labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
+
+    // ── Mouse interaction ───────────────────────
+    canvas.addEventListener('mousedown', function (e) {
+      drag.active = true; drag.sx = e.clientX; drag.sy = e.clientY;
+    });
+    document.addEventListener('mousemove', function (e) {
+      mouse.x = (e.clientX / window.innerWidth)  *  2 - 1;
+      mouse.y = (e.clientY / window.innerHeight) * -2 + 1;
+      if (!drag.active) return;
+      targetRot.y += (e.clientX - drag.sx) * 0.006;
+      targetRot.x += (e.clientY - drag.sy) * 0.006;
+      drag.sx = e.clientX; drag.sy = e.clientY;
+    });
+    document.addEventListener('mouseup', function () { drag.active = false; });
+    canvas.addEventListener('click', function () { if (pulseTime < 0) pulseTime = 0; });
+
+    console.log('[Atom] Initialized successfully');
+
+    // ── Animation loop ──────────────────────────
+    function animateAtom(time) {
+      var dt = 0.016;
+      var t  = time * 0.001;
+
+      // Pulse
+      var pulseScale = 1;
+      if (pulseTime >= 0) {
+        pulseTime += dt;
+        pulsePhase = pulseTime / PULSE_DUR;
+        if (pulsePhase >= 1) { pulseTime = -1; pulsePhase = 0; }
+        pulseScale = 1 + 0.25 * Math.sin(pulsePhase * Math.PI) * (1 - pulsePhase);
+      }
+
+      // Scene rotation
+      targetRot.y += 0.003;
+      if (!drag.active) {
+        targetRot.x += (mouse.y * 0.15 - targetRot.x) * 0.02;
+        targetRot.y += (mouse.x * 0.1  - targetRot.y) * 0.005;
+      }
+      scene.rotation.x += (targetRot.x - scene.rotation.x) * 0.06;
+      scene.rotation.y += (targetRot.y - scene.rotation.y) * 0.06;
+
+      // Camera parallax
+      camera.position.x += (mouse.x * 0.25 - camera.position.x) * 0.03;
+      camera.position.y += (mouse.y * 0.15 - camera.position.y) * 0.03;
+      camera.lookAt(0, 0, 0);
+
+      // Nucleus pulse
+      if (nucleusMesh) {
+        nucleusMesh.scale.setScalar((1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01) * pulseScale);
+      }
+      glowShells.forEach(function (shell, i) {
+        shell.scale.setScalar((1 + i * 0.3) * pulseScale);
+      });
+
+      // Orbit ring wobble
+      orbitRings.forEach(function (o) {
+        o.mesh.rotation.x = o.baseRotX + Math.sin(t * 0.3 + o.oi * 2.1) * 0.04;
+        o.mesh.rotation.z = o.baseRotZ + Math.cos(t * 0.25 + o.oi * 3.7) * 0.03;
+      });
+
+      // Mouse proximity
+      var mouseProx = Math.max(0, 1 - Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y) / 1.5);
+
+      // Electrons + trails
+      electrons.forEach(function (e) {
+        var speedNoise = Math.sin(t * e.speedVarFreq + e.seed) * e.speedVarAmp;
+        var angle = t * (e.baseSpeed + speedNoise) + e.offset;
+
+        var rPert = Math.sin(t * e.rPertFreq1 + e.seed * 1.3) * e.rPertAmp1
+                  + Math.sin(t * e.rPertFreq2 + e.seed * 2.9) * e.rPertAmp2;
+        var rxP = (e.rx + rPert) * pulseScale;
+        var ryP = (e.ry + rPert * 0.8) * pulseScale;
+
+        var distortX = mouseProx * mouse.x * 0.15;
+        var distortY = mouseProx * mouse.y * 0.12;
+
+        var cx = Math.cos(angle) * rxP + distortX;
+        var cy = Math.sin(angle) * ryP + distortY;
+
+        var wobbleX = Math.sin(t * 0.3 + e.seed * 0.01) * 0.04;
+        var wobbleZ = Math.cos(t * 0.25 + e.seed * 0.015) * 0.03;
+        var rX = e.rotX + wobbleX;
+        var rZ = e.rotZ + wobbleZ;
+
+        var cX = Math.cos(rX), sX = Math.sin(rX);
+        var cZ = Math.cos(rZ), sZ = Math.sin(rZ);
+        var y1 = cy * cX;
+        var z1 = cy * sX;
+        var x2 = cx * cZ - y1 * sZ;
+        var y2 = cx * sZ + y1 * cZ;
+
+        // Clamp to prevent NaN
+        if (isNaN(x2)) x2 = 0;
+        if (isNaN(y2)) y2 = 0;
+        if (isNaN(z1)) z1 = 0;
+
+        e.mesh.position.set(x2, y2, z1);
+
+        // Trail: exponential decay with flicker
+        var p = e.tPos;
+        var c = e.tColor;
+        var orbCfg = ORBITS[Math.floor(e.seed / 100)] || ORBITS[0];
+        var col = new THREE.Color(orbCfg.color);
+
+        for (var i = p.length - 3; i >= 3; i -= 3) {
+          p[i] = p[i - 3]; p[i + 1] = p[i - 2]; p[i + 2] = p[i - 1];
+        }
+        for (var i = c.length - 4; i >= 4; i -= 4) {
+          c[i] = c[i - 4]; c[i + 1] = c[i - 3]; c[i + 2] = c[i - 2]; c[i + 3] = c[i - 1];
+        }
+        p[0] = x2; p[1] = y2; p[2] = z1;
+
+        e.tCount = Math.min(e.tCount + 1, TRAIL_LEN);
+        var flicker = e.trailFlicker + Math.sin(t * 8 + e.seed) * 0.15;
+        for (var i = 0; i < e.tCount; i++) {
+          var frac = i / TRAIL_LEN;
+          var expDecay = Math.exp(-frac * 3.5);
+          c[i * 4]     = col.r;
+          c[i * 4 + 1] = col.g;
+          c[i * 4 + 2] = col.b;
+          c[i * 4 + 3] = Math.max(0, expDecay * 0.7 * flicker);
+        }
+        e.trail.geometry.attributes.position.needsUpdate = true;
+        e.trail.geometry.attributes.color.needsUpdate = true;
+        e.trail.geometry.setDrawRange(0, e.tCount);
+      });
+
+      // Labels — project to screen
+      labelEls.forEach(function (el, i) {
+        var cfg = LABELS[i];
+        if (!cfg) return;
+        var oc = ORBITS[cfg.orbit];
+        var la = cfg.angle;
+        var lx = Math.cos(la) * oc.rx;
+        var ly = Math.sin(la) * oc.ry;
+        var cX = Math.cos(oc.rotX), sX = Math.sin(oc.rotX);
+        var cZ = Math.cos(oc.rotZ), sZ = Math.sin(oc.rotZ);
+        var y1 = ly * cX; var z1 = ly * sX;
+        var x2 = lx * cZ - y1 * sZ;
+        var y2 = lx * sZ + y1 * cZ;
+
+        var v = new THREE.Vector3(x2, y2, z1);
+        v.applyMatrix4(scene.matrixWorld);
+        v.project(camera);
+
+        var screenX = (v.x * 0.5 + 0.5) * SIZE;
+        var screenY = (-v.y * 0.5 + 0.5) * SIZE;
+        var depthAlpha = Math.max(0.15, Math.min(1, 1.0 - v.z * 0.6));
+
+        if (!isNaN(screenX) && !isNaN(screenY)) {
+          el.style.left    = screenX + 'px';
+          el.style.top     = screenY + 'px';
+          el.style.opacity = depthAlpha.toFixed(2);
+        }
+      });
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateAtom);
+    }
+
+    // Start animation
+    requestAnimationFrame(animateAtom);
+  })();
+
+
+  // ============================================
+  // Animation Loop (2D canvases)
   // ============================================
   function animateAll(time) {
     drawWave(time);

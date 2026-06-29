@@ -512,6 +512,7 @@ em { font-style: normal; color: var(--accent); }
   width: 400px;
   height: 400px;
   cursor: grab;
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
 }
 #atom-canvas:active {
   cursor: grabbing;
