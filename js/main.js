@@ -788,6 +788,27 @@
       atomActive = true;
       requestAnimationFrame(render);
     }
+
+    // Tab visibility change reset handler
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        atomActive = false;
+      } else {
+        if (atomCanvas) {
+          var rect = atomCanvas.getBoundingClientRect();
+          var isVisible = (rect.top < window.innerHeight && rect.bottom > 0);
+          if (isVisible && !atomActive) {
+            atomActive = true;
+            requestAnimationFrame(render);
+          }
+        } else if (!atomActive) {
+          atomActive = true;
+          requestAnimationFrame(render);
+        }
+      }
+    });
+  })();
+
   // ============================================
   var heroActive = true;
 
