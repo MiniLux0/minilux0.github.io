@@ -809,10 +809,14 @@
     var charIdx = 0;
     function typeNext() {
       if (charIdx < fullText.length) {
-        subtitleEl.insertBefore(
-          document.createTextNode(fullText.charAt(charIdx)),
-          cursorSpan
-        );
+        if (cursorSpan && cursorSpan.parentNode === subtitleEl) {
+          subtitleEl.insertBefore(
+            document.createTextNode(fullText.charAt(charIdx)),
+            cursorSpan
+          );
+        } else {
+          subtitleEl.appendChild(document.createTextNode(fullText.charAt(charIdx)));
+        }
         charIdx++;
         setTimeout(typeNext, 50);
       } else {
