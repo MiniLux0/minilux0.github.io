@@ -555,8 +555,8 @@ em { font-style: normal; color: var(--accent); }
   position: absolute;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.08em;
   white-space: nowrap;
   transform: translate(-50%, -50%);
   opacity: 0.8;

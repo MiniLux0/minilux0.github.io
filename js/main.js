@@ -373,7 +373,7 @@
   }
 
   // ============================================
-  // 3D Atom — Pure Canvas 2D (Enhanced)
+  // 3D Atom — Pure Canvas 2D
   // ============================================
   (function () {
     var canvas = document.getElementById('atom-canvas');
@@ -381,71 +381,52 @@
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    var W = 400, H = 400;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var width = 400, height = 400; // logical dimensions (CSS pixels)
+
+    // ResizeObserver to always occupy 100% of container
+    var parent = canvas.parentElement || canvas;
+    var resizeObserver = new ResizeObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        var entry = entries[i];
+        width = entry.contentRect.width || entry.target.clientWidth || 400;
+        height = entry.contentRect.height || entry.target.clientHeight || 400;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    });
+    resizeObserver.observe(parent);
 
     var CAM_DIST  = 6;
     var FOV       = 3.5;
-    var AMBIENT_N = 40;       // Background ambient particles
 
-    // Orbit configs: 3 orbits with distinct tilts in X, Y, Z (reduced to 75% of previous size)
+    // Orbit configs: 3 orbits with angles of inclination (rotX, rotZ)
     var ORBITS = [
-      { rx: 0.73, ry: 0.63, rotX: 0.0,            rotZ: 0,            speed: 0.40 }, // Orbit 1 (0°)
-      { rx: 0.73, ry: 0.63, rotX: Math.PI / 3,    rotZ: Math.PI / 6,  speed: 0.50 }, // Orbit 2 (60°)
-      { rx: 0.73, ry: 0.63, rotX: Math.PI * 2 / 3,rotZ: -Math.PI / 5, speed: 0.45 }, // Orbit 3 (120°)
+      { rotX: 0.0,            rotZ: 0.0,           speed: 0.60 }, // Orbit 1
+      { rotX: Math.PI / 3,    rotZ: Math.PI / 6,   speed: 0.45 }, // Orbit 2
+      { rotX: Math.PI / 6,    rotZ: Math.PI / 2,   speed: 0.55 }, // Orbit 3
     ];
 
-    // Ambient floating particles
-    var ambientParticles = [];
-    for (var i = 0; i < AMBIENT_N; i++) {
-      ambientParticles.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.15, vy: (Math.random() - 0.5) * 0.15,
-        r: Math.random() * 1.2 + 0.3,
-        alpha: Math.random() * 0.3 + 0.05,
-        pulse: Math.random() * Math.PI * 2,
-      });
-    }
-
-    // Electrons: distribution per orbit (1, 1, 1)
+    // Electrons: 1 electron per orbit
     var electrons = [];
-    var eDistribution = [1, 1, 1];
     ORBITS.forEach(function (cfg, oi) {
-      var count = eDistribution[oi];
-      for (var e = 0; e < count; e++) {
-        var seed = oi * 100 + e * 37 + 13;
-        electrons.push({
-          rx: cfg.rx, ry: cfg.ry,
-          rotX: cfg.rotX, rotZ: cfg.rotZ,
-          baseSpeed: cfg.speed,
-          offset: (e / count) * Math.PI * 2 + seed * 0.1, // unique phase
-          seed: seed,
-          rPertFreq1: 0.7 + Math.random() * 0.6,
-          rPertAmp1:  0.08 + Math.random() * 0.07,
-          rPertFreq2: 1.3 + Math.random() * 0.8,
-          rPertAmp2:  0.04 + Math.random() * 0.04,
-          speedVarFreq: 0.5 + Math.random() * 0.4,
-          speedVarAmp:  0.12 + Math.random() * 0.08,
-          trail: [],
-        });
-      }
+      var seed = oi * 100 + 13;
+      electrons.push({
+        rotX: cfg.rotX, rotZ: cfg.rotZ,
+        baseSpeed: cfg.speed,
+        offset: seed * 0.5, // unique initial phase offset
+        seed: seed,
+        trail: [], // last 18 positions
+      });
     });
 
     // Rotation state
-    var rotY = 0, rotX = 0;
-    var targetRotY = 0, targetRotX = 0;
-    var dragActive = false, dragSX = 0, dragSY = 0;
-    var mouseX = 0, mouseY = 0;
-    var pulseTime = -1, PULSE_DUR = 1.2;
-
-    // Hover extra rotation (X and Y max ±0.25 rad with 0.04 lerp)
+    var rotY = 0; // global Y automatic rotation
     var extraRotX = 0, extraRotY = 0;
     var targetExtraRotX = 0, targetExtraRotY = 0;
 
-    // Expanding shockwaves (emitted every 4 seconds)
+    // Expanding shockwaves
     var shockwaves = [];
     var shockwaveTimer = 0;
 
@@ -462,13 +443,13 @@
       var c = Math.cos(a), s = Math.sin(a);
       return { x: p.x * c - p.y * s, y: p.x * s + p.y * c, z: p.z };
     }
-    function project(p) {
+    function project(p, cx, cy) {
       var z = p.z + CAM_DIST;
       if (z < 0.1) z = 0.1;
       var scale = FOV / z;
       return {
-        x: W / 2 + p.x * scale * (W / 2),
-        y: H / 2 - p.y * scale * (H / 2),
+        x: cx + p.x * scale * cx,
+        y: cy - p.y * scale * cy,
         z: p.z, scale: scale,
       };
     }
@@ -481,190 +462,132 @@
       return p;
     }
 
-    // ── Mouse interaction ───────────────────────
-    canvas.addEventListener('mousedown', function (e) {
-      dragActive = true; dragSX = e.clientX; dragSY = e.clientY;
-    });
-    document.addEventListener('mousemove', function (e) {
-      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouseY = (e.clientY / window.innerHeight) * -2 + 1;
-      if (!dragActive) return;
-      targetRotY += (e.clientX - dragSX) * 0.006;
-      targetRotX += (e.clientY - dragSY) * 0.006;
-      dragSX = e.clientX; dragSY = e.clientY;
-    });
-    document.addEventListener('mouseup', function () { dragActive = false; });
-    canvas.addEventListener('click', function () { if (pulseTime < 0) pulseTime = 0; });
-
-    // Track cursor offset from canvas center for hover tilt (max ±0.25 rad)
+    // ── Mouse interaction for hover tilt lerp ───
     canvas.addEventListener('mousemove', function (e) {
       var rect = canvas.getBoundingClientRect();
       var mx = (e.clientX - rect.left) - rect.width / 2;
       var my = (e.clientY - rect.top) - rect.height / 2;
       var ndx = mx / (rect.width / 2);
       var ndy = my / (rect.height / 2);
-      targetExtraRotY = ndx * 0.25;
-      targetExtraRotX = -ndy * 0.25;
+      targetExtraRotY = ndx * 0.3;  // max ±0.3 rad
+      targetExtraRotX = -ndy * 0.3; // max ±0.3 rad
     });
     canvas.addEventListener('mouseleave', function () {
       targetExtraRotX = 0;
       targetExtraRotY = 0;
     });
 
-    // ── Draw helpers ────────────────────────────
-    function drawGlowCircle(x, y, r, color, glowR, alpha) {
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = glowR;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+    var lastTime = null;
 
     // ── Main render loop ────────────────────────
     function render(time) {
-      var dt = 0.016;
+      if (lastTime === null) {
+        lastTime = time;
+        if (atomActive) {
+          requestAnimationFrame(render);
+        }
+        return;
+      }
+      var delta = time - lastTime;
+      lastTime = time;
+
+      // Delta time clipping: max 32ms to prevent huge jumps when returning
+      delta = Math.min(delta, 32);
+      var dt = delta * 0.001;
       var t = time * 0.001;
 
+      var cx = width / 2;
+      var cy = height / 2;
+      var rBase = Math.min(width, height) * 0.38;
+
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      var atomRGB = isLight ? '26, 26, 26' : '255, 255, 255';
+      var atomRGB = isLight ? '0, 0, 0' : '255, 255, 255';
       var coreColor = isLight ? '#000000' : '#ffffff';
+      var orbitColor = isLight ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.15)';
+      var outerElectronColor = isLight ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.3)';
+      var trailColorRGB = isLight ? '0, 0, 0' : '255, 255, 255';
+      var maxTrailOpacity = isLight ? 0.4 : 0.5;
 
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0, 0, width, height);
 
-      // ── Ambient particles ─────────────────────
-      ambientParticles.forEach(function (ap) {
-        ap.x += ap.vx; ap.y += ap.vy;
-        if (ap.x < 0) ap.x = W; if (ap.x > W) ap.x = 0;
-        if (ap.y < 0) ap.y = H; if (ap.y > H) ap.y = 0;
-        var flicker = 0.5 + 0.5 * Math.sin(t * 1.5 + ap.pulse);
-        ctx.save();
-        ctx.globalAlpha = ap.alpha * flicker;
-        ctx.fillStyle = isLight ? '#1a1a1a' : '#c0c0c0';
-        ctx.shadowColor = isLight ? '#1a1a1a' : '#c0c0c0';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(ap.x, ap.y, ap.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
+      // Auto rotation in Y
+      rotY += 0.003;
 
-      // Pulse
-      var pulseScale = 1;
-      if (pulseTime >= 0) {
-        pulseTime += dt;
-        var pp = pulseTime / PULSE_DUR;
-        if (pp >= 1) { pulseTime = -1; pp = 0; }
-        pulseScale = 1 + 0.25 * Math.sin(pp * Math.PI) * (1 - pp);
-      }
-
-      // Smooth rotation & hover tilt lerp
-      targetRotY += 0.003;
-      if (!dragActive) {
-        targetRotX += (mouseY * 0.15 - targetRotX) * 0.02;
-        targetRotY += (mouseX * 0.1 - targetRotY) * 0.005;
-      }
-      rotX += (targetRotX - rotX) * 0.06;
-      rotY += (targetRotY - rotY) * 0.06;
-
+      // Lerp mouse tilt at 4%
       extraRotX += (targetExtraRotX - extraRotX) * 0.04;
       extraRotY += (targetExtraRotY - extraRotY) * 0.04;
 
-      var currentRotX = rotX + extraRotX;
+      var currentRotX = extraRotX;
       var currentRotY = rotY + extraRotY;
 
       // ── Update Shockwaves ─────────────────────
       shockwaveTimer += dt;
       if (shockwaveTimer >= 4.0) {
+        // Pushes 2 shockwaves with 0.5s offset (using logic time delay)
         shockwaves.push({ age: 0 });
+        shockwaves.push({ age: -0.5 });
         shockwaveTimer = 0;
       }
       shockwaves.forEach(function (wave) {
         wave.age += dt;
       });
       shockwaves = shockwaves.filter(function (wave) {
-        return wave.age <= 0.8;
+        return wave.age <= 1.6; // max duration 1.6s
       });
 
       // ── Draw orbit paths ──────────────────────
       ORBITS.forEach(function (orb) {
-        // Glow pass
         ctx.save();
-        ctx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.08)' : 'rgba(255, 255, 255, 0.08)';
-        ctx.globalAlpha = 1.0;
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = orbitColor;
+        ctx.lineWidth = 1.0;
         ctx.beginPath();
-        for (var i = 0; i <= 120; i++) {
-          var a = (i / 120) * Math.PI * 2;
-          var px = Math.cos(a) * orb.rx * pulseScale;
-          var py = Math.sin(a) * orb.ry * pulseScale;
+        for (var i = 0; i <= 100; i++) {
+          var a = (i / 100) * Math.PI * 2;
+          // Elliptical orbits: rx = rBase, ry = rBase * 0.85
+          var px = Math.cos(a) * rBase;
+          var py = Math.sin(a) * rBase * 0.85;
           var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, currentRotX, currentRotY);
-          var p2 = project(p3);
+          var p2 = project(p3, cx, cy);
           if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
         }
-        ctx.closePath(); ctx.stroke(); ctx.restore();
-
-        // Crisp pass
-        ctx.save();
-        ctx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-        ctx.globalAlpha = 1.0;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (var i = 0; i <= 120; i++) {
-          var a = (i / 120) * Math.PI * 2;
-          var px = Math.cos(a) * orb.rx * pulseScale;
-          var py = Math.sin(a) * orb.ry * pulseScale;
-          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, currentRotX, currentRotY);
-          var p2 = project(p3);
-          if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
-        }
-        ctx.closePath(); ctx.stroke(); ctx.restore();
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
       });
 
-      // ── Electrons + trails ────────────────────
+      // ── Draw List for depth sorting ───────────
       var drawList = [];
 
       electrons.forEach(function (e) {
-        var speedNoise = Math.sin(t * e.speedVarFreq + e.seed) * e.speedVarAmp;
+        // stable speed: angle = t * baseSpeed + speedNoise + offset
+        var speedNoise = Math.sin(t * 2 + e.seed) * 0.15;
         var angle = t * e.baseSpeed + speedNoise + e.offset;
 
-        var rPert = Math.sin(t * e.rPertFreq1 + e.seed * 1.3) * e.rPertAmp1
-                  + Math.sin(t * e.rPertFreq2 + e.seed * 2.9) * e.rPertAmp2;
-        var rxP = (e.rx + rPert) * pulseScale;
-        var ryP = (e.ry + rPert * 0.8) * pulseScale;
+        var rxP = rBase;
+        var ryP = rBase * 0.85;
 
-        var mouseProx = Math.max(0, 1 - Math.sqrt(mouseX * mouseX + mouseY * mouseY) / 1.5);
-        var distortX = mouseProx * mouseX * 0.15;
-        var distortY = mouseProx * mouseY * 0.12;
+        var cxE = Math.cos(angle) * rxP;
+        var cyE = Math.sin(angle) * ryP;
 
-        var cx = Math.cos(angle) * rxP + distortX;
-        var cy = Math.sin(angle) * ryP + distortY;
+        var p3 = transformPoint(cxE, cyE, 0, e.rotX, e.rotZ, currentRotX, currentRotY);
+        var p2 = project(p3, cx, cy);
 
-        var wobbleX = Math.sin(t * 0.3 + e.seed * 0.01) * 0.04;
-        var wobbleZ = Math.cos(t * 0.25 + e.seed * 0.015) * 0.03;
-
-        var p3 = transformPoint(cx, cy, 0, e.rotX + wobbleX, e.rotZ + wobbleZ, currentRotX, currentRotY);
-        var p2 = project(p3);
-
-        // Store projected 2D trail (keep last 14 coordinates)
+        // Store trail
         e.trail.unshift({ x: p2.x, y: p2.y });
-        if (e.trail.length > 14) e.trail.pop();
+        if (e.trail.length > 18) e.trail.pop();
 
-        // Draw trail segment lines with custom width/opacity ranges
+        // Draw trail lines
         if (e.trail.length > 1) {
           for (var i = 1; i < e.trail.length; i++) {
-            var frac = i / 14;
-            var opacity = 0.45 * (1 - frac);
-            var width = 0.4 + 1.4 * (1 - frac);
+            var frac = i / (e.trail.length - 1);
+            var opacity = maxTrailOpacity * (1 - frac);
+            var w = 2.0 - 1.7 * frac; // goes from 2.0 to 0.3
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(e.trail[i - 1].x, e.trail[i - 1].y);
             ctx.lineTo(e.trail[i].x, e.trail[i].y);
-            ctx.strokeStyle = 'rgba(' + atomRGB + ', ' + opacity + ')';
-            ctx.lineWidth = width;
+            ctx.strokeStyle = 'rgba(' + trailColorRGB + ', ' + opacity + ')';
+            ctx.lineWidth = w;
             ctx.lineCap = 'round';
             ctx.stroke();
             ctx.restore();
@@ -674,65 +597,66 @@
         drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale });
       });
 
-      // ── Nucleus ───────────────────────────────
-      var nucPulse = 1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01;
-      var nucScale = nucPulse * pulseScale;
-      var nuc3 = rotateY(rotateX({ x: 0, y: 0, z: 0 }, currentRotX), currentRotY);
-      var nuc2 = project(nuc3);
-      drawList.push({ type: 'nucleus', x: nuc2.x, y: nuc2.y, z: nuc3.z, scale: nuc2.scale, r: nucScale });
+      // Nucleus item
+      drawList.push({ type: 'nucleus', z: 0, scale: FOV / CAM_DIST });
 
-      // Depth sort (far first)
-      drawList.sort(function (a, b) { return (b.z + CAM_DIST) - (a.z + CAM_DIST); });
+      // Depth sorting
+      drawList.sort(function (a, b) {
+        return b.z - a.z;
+      });
 
-      // Draw sorted
+      // Draw items
       drawList.forEach(function (item) {
         if (item.type === 'nucleus') {
-          // Asegurarse de que el núcleo y shockwaves se dibujen en el centro exacto del canvas logical (cx, cy)
-          var cx = W / 2;
-          var cy = H / 2;
+          // Halos
+          var rOuter = 20 + 5 * Math.sin(t * 1.5);
+          var rMid = 12 + 3 * Math.sin(t * 2 + 1);
+          
+          ctx.beginPath();
+          ctx.arc(cx, cy, rOuter, 0, Math.PI * 2);
+          ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+          ctx.fill();
 
-          var r = 8 * item.scale * item.r;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rMid, 0, Math.PI * 2);
+          ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.13)' : 'rgba(255, 255, 255, 0.13)';
+          ctx.fill();
 
-          // Halo exterior: 14px to 22px
-          var rOuter = (18 + 4 * Math.sin(t * 1.5)) * item.scale;
-          // Halo medio: 9px to 14px
-          var rMid = (11.5 + 2.5 * Math.sin(t * 2.0 + 1)) * item.scale;
-          // Nucleo sólido: 5px
-          var rCore = 5 * item.scale;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+          ctx.fillStyle = coreColor;
+          ctx.fill();
 
-          drawGlowCircle(cx, cy, rOuter, 'rgba(' + atomRGB + ', 0.06)', 12 * item.scale, 1.0);
-          drawGlowCircle(cx, cy, rMid, 'rgba(' + atomRGB + ', 0.15)', 8 * item.scale, 1.0);
-          drawGlowCircle(cx, cy, rCore, coreColor, 4 * item.scale, 1.0);
+          ctx.beginPath();
+          ctx.arc(cx + 2, cy - 2, 2, 0, Math.PI * 2);
+          ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+          ctx.fill();
 
-          // Destello: 2px offset at (+2, -2) from center
-          drawGlowCircle(cx + 2 * item.scale, cy - 2 * item.scale, 2 * item.scale, 'rgba(' + atomRGB + ', 0.9)', 0, 1.0);
-
-          // Render active expanding shockwaves
+          // Shockwaves
           shockwaves.forEach(function (wave) {
-            var progress = wave.age / 0.8;
-            var rWave = progress * 90 * item.scale;
-            var waveOpacity = 0.35 * (1 - progress);
+            if (wave.age < 0) return;
+            var progress = wave.age / 1.6;
+            if (progress > 1) return;
+            var rWave = progress * (Math.min(width, height) * 0.46);
+            var waveOpacity = 0.45 * (1 - progress);
             ctx.save();
             ctx.beginPath();
             ctx.arc(cx, cy, rWave, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(' + atomRGB + ', ' + waveOpacity + ')';
-            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, ' + waveOpacity + ')' : 'rgba(255, 255, 255, ' + waveOpacity + ')';
+            ctx.lineWidth = 1.2;
             ctx.stroke();
             ctx.restore();
           });
 
         } else if (item.type === 'electron') {
-          // Límite de clipping: no dibujar si cae fuera del canvas logical
-          if (item.x < 0 || item.x > W || item.y < 0 || item.y > H) return;
-
-          var rOuter = 6 * item.scale;
-          var rInner = 3 * item.scale;
+          // Clipping check
+          if (item.x < 0 || item.x > width || item.y < 0 || item.y > height) return;
 
           // Outer circle
           ctx.save();
-          ctx.fillStyle = 'rgba(' + atomRGB + ', 0.4)';
+          ctx.fillStyle = outerElectronColor;
           ctx.beginPath();
-          ctx.arc(item.x, item.y, rOuter, 0, Math.PI * 2);
+          ctx.arc(item.x, item.y, 5, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
 
@@ -740,25 +664,24 @@
           ctx.save();
           ctx.fillStyle = coreColor;
           ctx.beginPath();
-          ctx.arc(item.x, item.y, rInner, 0, Math.PI * 2);
+          ctx.arc(item.x, item.y, 2.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
       });
 
-      // ── Labels ────────────────────────────────
-      // Posiciones fijas bien separadas con offsets manuales desde el centro (W/2, H/2)
+      // ── Labels positions ──────────────────────
       var labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
-      var offsets = [
-        { dx: 90, dy: -80 },    // Superior derecha (+90, -80)
-        { dx: -110, dy: 70 },   // Inferior izquierda (-110, +70)
-        { dx: 80, dy: 70 }      // Inferior derecha (+80, +70)
+      var labelCoords = [
+        { dx: -width * 0.3, dy: -height * 0.25 },
+        { dx: width * 0.28, dy: -height * 0.22 },
+        { dx: 0,            dy: height * 0.3 }
       ];
-      offsets.forEach(function (off, i) {
+      labelCoords.forEach(function (coord, i) {
         if (!labelEls[i]) return;
-        labelEls[i].style.left = (W / 2 + off.dx) + 'px';
-        labelEls[i].style.top = (H / 2 + off.dy) + 'px';
-        labelEls[i].style.opacity = '0.75';
+        labelEls[i].style.left = (cx + coord.dx) + 'px';
+        labelEls[i].style.top = (cy + coord.dy) + 'px';
+        labelEls[i].style.opacity = '1';
       });
 
       if (atomActive) {
@@ -774,6 +697,7 @@
           if (entry.isIntersecting) {
             if (!atomActive) {
               atomActive = true;
+              lastTime = null;
               requestAnimationFrame(render);
             }
           } else {
@@ -792,6 +716,7 @@
       if (document.hidden) {
         atomActive = false;
       } else {
+        lastTime = null; // reset logic timeline on return
         if (atomCanvas) {
           var rect = atomCanvas.getBoundingClientRect();
           var isVisible = (rect.top < window.innerHeight && rect.bottom > 0);
