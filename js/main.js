@@ -391,11 +391,11 @@
     var FOV       = 3.5;
     var AMBIENT_N = 40;       // Background ambient particles
 
-    // Orbit configs: 3 orbits with distinct tilts in X, Y, Z (35% smaller)
+    // Orbit configs: 3 orbits with distinct tilts in X, Y, Z (reduced to 75% of previous size)
     var ORBITS = [
-      { rx: 0.98, ry: 0.85, rotX: 0.0,            rotZ: 0,            speed: 0.40 }, // Orbit 1 (0°)
-      { rx: 0.98, ry: 0.85, rotX: Math.PI / 3,    rotZ: Math.PI / 6,  speed: 0.50 }, // Orbit 2 (60°)
-      { rx: 0.98, ry: 0.85, rotX: Math.PI * 2 / 3,rotZ: -Math.PI / 5, speed: 0.45 }, // Orbit 3 (120°)
+      { rx: 0.73, ry: 0.63, rotX: 0.0,            rotZ: 0,            speed: 0.40 }, // Orbit 1 (0°)
+      { rx: 0.73, ry: 0.63, rotX: Math.PI / 3,    rotZ: Math.PI / 6,  speed: 0.50 }, // Orbit 2 (60°)
+      { rx: 0.73, ry: 0.63, rotX: Math.PI * 2 / 3,rotZ: -Math.PI / 5, speed: 0.45 }, // Orbit 3 (120°)
     ];
 
     // Ambient floating particles
@@ -687,6 +687,10 @@
       // Draw sorted
       drawList.forEach(function (item) {
         if (item.type === 'nucleus') {
+          // Asegurarse de que el núcleo y shockwaves se dibujen en el centro exacto del canvas logical (cx, cy)
+          var cx = W / 2;
+          var cy = H / 2;
+
           var r = 8 * item.scale * item.r;
 
           // Halo exterior: 14px to 22px
@@ -696,12 +700,12 @@
           // Nucleo sólido: 5px
           var rCore = 5 * item.scale;
 
-          drawGlowCircle(item.x, item.y, rOuter, 'rgba(' + atomRGB + ', 0.06)', 12 * item.scale, 1.0);
-          drawGlowCircle(item.x, item.y, rMid, 'rgba(' + atomRGB + ', 0.15)', 8 * item.scale, 1.0);
-          drawGlowCircle(item.x, item.y, rCore, coreColor, 4 * item.scale, 1.0);
+          drawGlowCircle(cx, cy, rOuter, 'rgba(' + atomRGB + ', 0.06)', 12 * item.scale, 1.0);
+          drawGlowCircle(cx, cy, rMid, 'rgba(' + atomRGB + ', 0.15)', 8 * item.scale, 1.0);
+          drawGlowCircle(cx, cy, rCore, coreColor, 4 * item.scale, 1.0);
 
           // Destello: 2px offset at (+2, -2) from center
-          drawGlowCircle(item.x + 2 * item.scale, item.y - 2 * item.scale, 2 * item.scale, 'rgba(' + atomRGB + ', 0.9)', 0, 1.0);
+          drawGlowCircle(cx + 2 * item.scale, cy - 2 * item.scale, 2 * item.scale, 'rgba(' + atomRGB + ', 0.9)', 0, 1.0);
 
           // Render active expanding shockwaves
           shockwaves.forEach(function (wave) {
@@ -710,7 +714,7 @@
             var waveOpacity = 0.35 * (1 - progress);
             ctx.save();
             ctx.beginPath();
-            ctx.arc(item.x, item.y, rWave, 0, Math.PI * 2);
+            ctx.arc(cx, cy, rWave, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(' + atomRGB + ', ' + waveOpacity + ')';
             ctx.lineWidth = 0.8;
             ctx.stroke();
@@ -718,6 +722,9 @@
           });
 
         } else if (item.type === 'electron') {
+          // Límite de clipping: no dibujar si cae fuera del canvas logical
+          if (item.x < 0 || item.x > W || item.y < 0 || item.y > H) return;
+
           var rOuter = 6 * item.scale;
           var rInner = 3 * item.scale;
 
@@ -740,25 +747,18 @@
       });
 
       // ── Labels ────────────────────────────────
-      var labelData = [
-        { orbit: 0, angle: 0.8 },
-        { orbit: 1, angle: 2.5 },
-        { orbit: 2, angle: 4.2 },
-      ];
+      // Posiciones fijas bien separadas con offsets manuales desde el centro (W/2, H/2)
       var labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
-      labelData.forEach(function (ld, i) {
+      var offsets = [
+        { dx: 90, dy: -80 },    // Superior derecha (+90, -80)
+        { dx: -110, dy: 70 },   // Inferior izquierda (-110, +70)
+        { dx: 80, dy: 70 }      // Inferior derecha (+80, +70)
+      ];
+      offsets.forEach(function (off, i) {
         if (!labelEls[i]) return;
-        var oc = ORBITS[ld.orbit];
-        var lx = Math.cos(ld.angle) * oc.rx;
-        var ly = Math.sin(ld.angle) * oc.ry;
-        var p3 = transformPoint(lx, ly, 0, oc.rotX, oc.rotZ, currentRotX, currentRotY);
-        var p2 = project(p3);
-        var depthAlpha = Math.max(0.2, Math.min(1, 1 - p3.z * 0.25));
-        if (!isNaN(p2.x) && !isNaN(p2.y)) {
-          labelEls[i].style.left = p2.x + 'px';
-          labelEls[i].style.top = p2.y + 'px';
-          labelEls[i].style.opacity = depthAlpha.toFixed(2);
-        }
+        labelEls[i].style.left = (W / 2 + off.dx) + 'px';
+        labelEls[i].style.top = (H / 2 + off.dy) + 'px';
+        labelEls[i].style.opacity = '0.75';
       });
 
       if (atomActive) {
