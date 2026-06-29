@@ -534,9 +534,15 @@ em { font-style: normal; color: var(--accent); }
   transform: translate(-50%, -50%);
   opacity: 0.8;
   transition: opacity 0.15s ease-out;
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
   pointer-events: none;
   user-select: none;
+  background: rgba(6, 10, 20, 0.7);
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
 }
 
 /* Nucleus center label */

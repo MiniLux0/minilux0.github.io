@@ -262,7 +262,7 @@
 
 
   // ============================================
-  // 3D Atom — Pure Canvas 2D (No Dependencies)
+  // 3D Atom — Pure Canvas 2D (Enhanced)
   // ============================================
   (function () {
     var canvas = document.getElementById('atom-canvas');
@@ -276,9 +276,10 @@
     canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    var TRAIL_LEN = 22;
-    var CAM_DIST = 6;
-    var FOV = 3.5;
+    var TRAIL_LEN = 30;       // Longer trails
+    var CAM_DIST  = 6;
+    var FOV       = 3.5;
+    var AMBIENT_N = 40;       // Background ambient particles
 
     // Orbit configs
     var ORBITS = [
@@ -286,6 +287,18 @@
       { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  speed: 0.55, color: '#38bdf8' },
       { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, speed: 0.35, color: '#60a5fa' },
     ];
+
+    // Ambient floating particles
+    var ambientParticles = [];
+    for (var i = 0; i < AMBIENT_N; i++) {
+      ambientParticles.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.15, vy: (Math.random() - 0.5) * 0.15,
+        r: Math.random() * 1.2 + 0.3,
+        alpha: Math.random() * 0.3 + 0.05,
+        pulse: Math.random() * Math.PI * 2,
+      });
+    }
 
     // Electrons: 3 per orbit
     var electrons = [];
@@ -305,7 +318,7 @@
           speedVarFreq: 0.5 + Math.random() * 0.4,
           speedVarAmp:  0.12 + Math.random() * 0.08,
           trailFlicker: 0.8 + Math.random() * 0.4,
-          trail: [],    // Array of {x,y,z}
+          trail: [],
         });
       }
     });
@@ -340,12 +353,12 @@
         z: p.z, scale: scale,
       };
     }
-    function transformPoint(px, py, pz, orbitRotX, orbitRotZ, sceneRotX, sceneRotY) {
+    function transformPoint(px, py, pz, oRX, oRZ, sRX, sRY) {
       var p = { x: px, y: py, z: pz };
-      p = rotateX(p, orbitRotX);
-      p = rotateZ(p, orbitRotZ);
-      p = rotateX(p, sceneRotX);
-      p = rotateY(p, sceneRotY);
+      p = rotateX(p, oRX);
+      p = rotateZ(p, oRZ);
+      p = rotateX(p, sRX);
+      p = rotateY(p, sRY);
       return p;
     }
 
@@ -377,35 +390,29 @@
       ctx.restore();
     }
 
-    function drawOrbitPath(orbitCfg, sceneRotX, sceneRotY, pulseScale) {
-      ctx.save();
-      ctx.strokeStyle = orbitCfg.color;
-      ctx.globalAlpha = 0.25;
-      ctx.lineWidth = 1.2;
-      ctx.shadowColor = orbitCfg.color;
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      var steps = 120;
-      for (var i = 0; i <= steps; i++) {
-        var a = (i / steps) * Math.PI * 2;
-        var px = Math.cos(a) * orbitCfg.rx * pulseScale;
-        var py = Math.sin(a) * orbitCfg.ry * pulseScale;
-        var p3 = transformPoint(px, py, 0, orbitCfg.rotX, orbitCfg.rotZ, sceneRotX, sceneRotY);
-        var p2 = project(p3);
-        if (i === 0) ctx.moveTo(p2.x, p2.y);
-        else ctx.lineTo(p2.x, p2.y);
-      }
-      ctx.closePath();
-      ctx.stroke();
-      ctx.restore();
-    }
-
     // ── Main render loop ────────────────────────
     function render(time) {
       var dt = 0.016;
       var t = time * 0.001;
 
       ctx.clearRect(0, 0, W, H);
+
+      // ── Ambient particles ─────────────────────
+      ambientParticles.forEach(function (ap) {
+        ap.x += ap.vx; ap.y += ap.vy;
+        if (ap.x < 0) ap.x = W; if (ap.x > W) ap.x = 0;
+        if (ap.y < 0) ap.y = H; if (ap.y > H) ap.y = 0;
+        var flicker = 0.5 + 0.5 * Math.sin(t * 1.5 + ap.pulse);
+        ctx.save();
+        ctx.globalAlpha = ap.alpha * flicker;
+        ctx.fillStyle = '#3b82f6';
+        ctx.shadowColor = '#3b82f6';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(ap.x, ap.y, ap.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
 
       // Pulse
       var pulseScale = 1;
@@ -425,26 +432,57 @@
       rotX += (targetRotX - rotX) * 0.06;
       rotY += (targetRotY - rotY) * 0.06;
 
-      // Draw orbits
+      // ── Draw orbit paths ──────────────────────
       ORBITS.forEach(function (orb) {
-        drawOrbitPath(orb, rotX, rotY, pulseScale);
+        // Glow pass (wider, fainter)
+        ctx.save();
+        ctx.strokeStyle = orb.color;
+        ctx.globalAlpha = 0.08;
+        ctx.lineWidth = 4;
+        ctx.shadowColor = orb.color;
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        for (var i = 0; i <= 120; i++) {
+          var a = (i / 120) * Math.PI * 2;
+          var px = Math.cos(a) * orb.rx * pulseScale;
+          var py = Math.sin(a) * orb.ry * pulseScale;
+          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, rotX, rotY);
+          var p2 = project(p3);
+          if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
+        }
+        ctx.closePath(); ctx.stroke(); ctx.restore();
+
+        // Crisp pass
+        ctx.save();
+        ctx.strokeStyle = orb.color;
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 1;
+        ctx.shadowColor = orb.color;
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        for (var i = 0; i <= 120; i++) {
+          var a = (i / 120) * Math.PI * 2;
+          var px = Math.cos(a) * orb.rx * pulseScale;
+          var py = Math.sin(a) * orb.ry * pulseScale;
+          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, rotX, rotY);
+          var p2 = project(p3);
+          if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
+        }
+        ctx.closePath(); ctx.stroke(); ctx.restore();
       });
 
-      // Draw trails + electrons
+      // ── Electrons + trails ────────────────────
       var drawList = [];
 
       electrons.forEach(function (e) {
-        // Perturbed angle
         var speedNoise = Math.sin(t * e.speedVarFreq + e.seed) * e.speedVarAmp;
         var angle = t * (e.baseSpeed + speedNoise) + e.offset;
 
-        // Perturbed radius
         var rPert = Math.sin(t * e.rPertFreq1 + e.seed * 1.3) * e.rPertAmp1
                   + Math.sin(t * e.rPertFreq2 + e.seed * 2.9) * e.rPertAmp2;
         var rxP = (e.rx + rPert) * pulseScale;
         var ryP = (e.ry + rPert * 0.8) * pulseScale;
 
-        // Mouse distortion
         var mouseProx = Math.max(0, 1 - Math.sqrt(mouseX * mouseX + mouseY * mouseY) / 1.5);
         var distortX = mouseProx * mouseX * 0.15;
         var distortY = mouseProx * mouseY * 0.12;
@@ -452,7 +490,6 @@
         var cx = Math.cos(angle) * rxP + distortX;
         var cy = Math.sin(angle) * ryP + distortY;
 
-        // Orbit wobble
         var wobbleX = Math.sin(t * 0.3 + e.seed * 0.01) * 0.04;
         var wobbleZ = Math.cos(t * 0.25 + e.seed * 0.015) * 0.03;
 
@@ -463,18 +500,20 @@
         e.trail.unshift({ x: p2.x, y: p2.y, z: p3.z });
         if (e.trail.length > TRAIL_LEN) e.trail.pop();
 
-        // Draw trail (exponential decay)
-        if (e.trail.length > 1) {
+        // Draw trail with smooth curve + exponential decay
+        if (e.trail.length > 2) {
           for (var i = 1; i < e.trail.length; i++) {
             var frac = i / TRAIL_LEN;
-            var alpha = Math.exp(-frac * 3.5) * 0.6 * e.trailFlicker;
-            if (alpha < 0.01) continue;
+            var alpha = Math.exp(-frac * 2.8) * 0.7 * e.trailFlicker;
+            if (alpha < 0.005) continue;
+            var lw = 2.5 * (1 - frac * 0.6);
             ctx.save();
             ctx.globalAlpha = alpha;
             ctx.strokeStyle = e.color;
-            ctx.lineWidth = 2 * (1 - frac * 0.5);
+            ctx.lineWidth = lw;
             ctx.shadowColor = e.color;
-            ctx.shadowBlur = 4;
+            ctx.shadowBlur = 6;
+            ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(e.trail[i - 1].x, e.trail[i - 1].y);
             ctx.lineTo(e.trail[i].x, e.trail[i].y);
@@ -483,16 +522,13 @@
           }
         }
 
-        // Collect for depth sorting
         drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale, color: e.color });
       });
 
-      // Nucleus
+      // ── Nucleus ───────────────────────────────
       var nucPulse = 1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01;
       var nucScale = nucPulse * pulseScale;
-      var nuc3 = { x: 0, y: 0, z: 0 };
-      nuc3 = rotateX(nuc3, rotX);
-      nuc3 = rotateY(nuc3, rotY);
+      var nuc3 = rotateY(rotateX({ x: 0, y: 0, z: 0 }, rotX), rotY);
       var nuc2 = project(nuc3);
       drawList.push({ type: 'nucleus', x: nuc2.x, y: nuc2.y, z: nuc3.z, scale: nuc2.scale, r: nucScale });
 
@@ -503,24 +539,34 @@
       drawList.forEach(function (item) {
         if (item.type === 'nucleus') {
           var r = 8 * item.scale * item.r;
+          // Wide outer halo
+          drawGlowCircle(item.x, item.y, r * 5, '#1e40af', 60, 0.03);
           // Outer glow
-          drawGlowCircle(item.x, item.y, r * 3, '#3b82f6', 40, 0.06);
-          // Middle glow
-          drawGlowCircle(item.x, item.y, r * 2, '#3b82f6', 25, 0.12);
+          drawGlowCircle(item.x, item.y, r * 3.5, '#3b82f6', 45, 0.07);
+          // Mid glow
+          drawGlowCircle(item.x, item.y, r * 2.2, '#3b82f6', 30, 0.15);
+          // Inner glow
+          drawGlowCircle(item.x, item.y, r * 1.4, '#60a5fa', 18, 0.4);
           // Core
-          drawGlowCircle(item.x, item.y, r, '#60a5fa', 15, 0.9);
+          drawGlowCircle(item.x, item.y, r, '#93c5fd', 12, 0.95);
+          // Hot center
+          drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.6);
         } else {
           var er = 3.5 * item.scale;
-          drawGlowCircle(item.x, item.y, er * 2.5, item.color, 12, 0.15);
+          // Outer glow
+          drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.1);
+          // Mid glow
+          drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.25);
+          // Core
           drawGlowCircle(item.x, item.y, er, '#ffffff', 8, 0.95);
         }
       });
 
-      // Labels
+      // ── Labels ────────────────────────────────
       var labelData = [
-        { orbit: 0, angle: 0.8, el: null },
-        { orbit: 1, angle: 2.5, el: null },
-        { orbit: 2, angle: 4.2, el: null },
+        { orbit: 0, angle: 0.8 },
+        { orbit: 1, angle: 2.5 },
+        { orbit: 2, angle: 4.2 },
       ];
       var labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
       labelData.forEach(function (ld, i) {
@@ -530,17 +576,18 @@
         var ly = Math.sin(ld.angle) * oc.ry;
         var p3 = transformPoint(lx, ly, 0, oc.rotX, oc.rotZ, rotX, rotY);
         var p2 = project(p3);
-        var depthAlpha = Math.max(0.15, Math.min(1, 1 - p3.z * 0.3));
-        labelEls[i].style.left = p2.x + 'px';
-        labelEls[i].style.top = p2.y + 'px';
-        labelEls[i].style.opacity = depthAlpha.toFixed(2);
+        var depthAlpha = Math.max(0.2, Math.min(1, 1 - p3.z * 0.25));
+        if (!isNaN(p2.x) && !isNaN(p2.y)) {
+          labelEls[i].style.left = p2.x + 'px';
+          labelEls[i].style.top = p2.y + 'px';
+          labelEls[i].style.opacity = depthAlpha.toFixed(2);
+        }
       });
 
       requestAnimationFrame(render);
     }
 
     requestAnimationFrame(render);
-    console.log('[Atom] Canvas 2D initialized');
   })();
 
 
