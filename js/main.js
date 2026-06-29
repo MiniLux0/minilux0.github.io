@@ -262,140 +262,42 @@
 
 
   // ============================================
-  // 3D Atom — Three.js (Global, No Modules)
+  // 3D Atom — Pure Canvas 2D (No Dependencies)
   // ============================================
-  (function initAtom() {
+  (function () {
     var canvas = document.getElementById('atom-canvas');
-    if (!canvas || typeof THREE === 'undefined') {
-      console.warn('[Atom] THREE not loaded or canvas missing');
-      return;
-    }
-    console.log('[Atom] THREE loaded, initializing...');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    var SIZE = 400;
-    var TRAIL_LEN = 24;
+    var W = 400, H = 400;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Orbit definitions
+    var TRAIL_LEN = 22;
+    var CAM_DIST = 6;
+    var FOV = 3.5;
+
+    // Orbit configs
     var ORBITS = [
-      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            baseSpeed: 0.40, color: 0x3b82f6 },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  baseSpeed: 0.55, color: 0x38bdf8 },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, baseSpeed: 0.35, color: 0x60a5fa },
+      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            speed: 0.40, color: '#3b82f6' },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  speed: 0.55, color: '#38bdf8' },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, speed: 0.35, color: '#60a5fa' },
     ];
 
-    var LABELS = [
-      { orbit: 0, angle: 0.8 },
-      { orbit: 1, angle: 2.5 },
-      { orbit: 2, angle: 4.2 },
-    ];
-
-    // State
-    var renderer, scene, camera;
-    var electrons = [], orbitRings = [], labelEls = [], nucleusMesh = null, glowShells = [];
-    var drag = { active: false, sx: 0, sy: 0 };
-    var targetRot = { x: 0, y: 0 };
-    var mouse = { x: 0, y: 0 };
-    var pulseTime = -1, pulsePhase = 0;
-    var PULSE_DUR = 1.2;
-
-    // ── Create renderer ─────────────────────────
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(SIZE, SIZE);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
-
-    scene  = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-    camera.position.set(0, 0, 7);
-    camera.lookAt(0, 0, 0);
-
-    // ── Lighting ────────────────────────────────
-    scene.add(new THREE.AmbientLight(0x0a1628, 0.6));
-    var keyLight = new THREE.DirectionalLight(0x4488ff, 0.4);
-    keyLight.position.set(3, 4, 5);
-    scene.add(keyLight);
-    var rimLight = new THREE.DirectionalLight(0x14b8a6, 0.2);
-    rimLight.position.set(-2, -3, 2);
-    scene.add(rimLight);
-
-    // ── Nucleus (layered glow) ──────────────────
-    nucleusMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.22, 32, 32),
-      new THREE.MeshStandardMaterial({
-        color: 0x60a5fa, emissive: 0x3b82f6, emissiveIntensity: 1.2,
-        metalness: 0.3, roughness: 0.4,
-      })
-    );
-    scene.add(nucleusMesh);
-
-    // Glow shells (additive blending for bloom-like effect)
-    function addShell(r, op) {
-      var m = new THREE.Mesh(
-        new THREE.SphereGeometry(r, 32, 32),
-        new THREE.MeshBasicMaterial({
-          color: 0x3b82f6, transparent: true, opacity: op,
-          blending: THREE.AdditiveBlending, depthWrite: false,
-        })
-      );
-      scene.add(m);
-      glowShells.push(m);
-    }
-    addShell(0.35, 0.15);
-    addShell(0.55, 0.06);
-
-    scene.add(new THREE.PointLight(0x3b82f6, 2.5, 6));
-
-    // ── Orbits + Electrons + Trails ─────────────
+    // Electrons: 3 per orbit
+    var electrons = [];
     ORBITS.forEach(function (cfg, oi) {
-      // Orbit ring
-      var curve  = new THREE.EllipseCurve(0, 0, cfg.rx, cfg.ry, 0, Math.PI * 2, false, 0);
-      var pts2D  = curve.getPoints(160);
-      var path3D = new THREE.CatmullRomCurve3(
-        pts2D.map(function (p) { return new THREE.Vector3(p.x, p.y, 0); }), true
-      );
-      var ring = new THREE.Mesh(
-        new THREE.TubeGeometry(path3D, 160, 0.008, 6, true),
-        new THREE.MeshBasicMaterial({
-          color: cfg.color, transparent: true, opacity: 0.22,
-          blending: THREE.AdditiveBlending, depthWrite: false,
-        })
-      );
-      ring.rotation.x = cfg.rotX;
-      ring.rotation.z = cfg.rotZ;
-      scene.add(ring);
-      orbitRings.push({ mesh: ring, baseRotX: cfg.rotX, baseRotZ: cfg.rotZ, oi: oi });
-
-      // 3 electrons per orbit
       for (var e = 0; e < 3; e++) {
-        var eMat = new THREE.MeshStandardMaterial({
-          color: 0xffffff, emissive: cfg.color, emissiveIntensity: 1.0,
-          metalness: 0.1, roughness: 0.3,
-        });
-        var electron = new THREE.Mesh(new THREE.SphereGeometry(0.065, 16, 16), eMat);
-        electron.add(new THREE.PointLight(cfg.color, 0.6, 1.5));
-        scene.add(electron);
-
-        // Trail buffer (per-vertex color with alpha)
-        var tPos   = new Float32Array(TRAIL_LEN * 3);
-        var tColor = new Float32Array(TRAIL_LEN * 4);
-        var tGeo   = new THREE.BufferGeometry();
-        tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
-        tGeo.setAttribute('color',    new THREE.BufferAttribute(tColor, 4));
-        tGeo.setDrawRange(0, 0);
-        var trail = new THREE.Line(tGeo, new THREE.LineBasicMaterial({
-          vertexColors: true, transparent: true,
-          blending: THREE.AdditiveBlending, depthWrite: false,
-        }));
-        scene.add(trail);
-
         var seed = oi * 100 + e * 37 + 13;
         electrons.push({
-          mesh: electron, trail: trail, tPos: tPos, tColor: tColor, tCount: 0,
           rx: cfg.rx, ry: cfg.ry,
           rotX: cfg.rotX, rotZ: cfg.rotZ,
-          baseSpeed: cfg.baseSpeed,
+          baseSpeed: cfg.speed,
           offset: (e / 3) * Math.PI * 2,
-          seed: seed,
+          seed: seed, color: cfg.color,
           rPertFreq1: 0.7 + Math.random() * 0.6,
           rPertAmp1:  0.08 + Math.random() * 0.07,
           rPertFreq2: 1.3 + Math.random() * 0.8,
@@ -403,174 +305,242 @@
           speedVarFreq: 0.5 + Math.random() * 0.4,
           speedVarAmp:  0.12 + Math.random() * 0.08,
           trailFlicker: 0.8 + Math.random() * 0.4,
+          trail: [],    // Array of {x,y,z}
         });
       }
     });
 
-    // ── Labels ──────────────────────────────────
-    labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
+    // Rotation state
+    var rotY = 0, rotX = 0;
+    var targetRotY = 0, targetRotX = 0;
+    var dragActive = false, dragSX = 0, dragSY = 0;
+    var mouseX = 0, mouseY = 0;
+    var pulseTime = -1, PULSE_DUR = 1.2;
+
+    // ── 3D math helpers ─────────────────────────
+    function rotateX(p, a) {
+      var c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x, y: p.y * c - p.z * s, z: p.y * s + p.z * c };
+    }
+    function rotateY(p, a) {
+      var c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x * c + p.z * s, y: p.y, z: -p.x * s + p.z * c };
+    }
+    function rotateZ(p, a) {
+      var c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x * c - p.y * s, y: p.x * s + p.y * c, z: p.z };
+    }
+    function project(p) {
+      var z = p.z + CAM_DIST;
+      if (z < 0.1) z = 0.1;
+      var scale = FOV / z;
+      return {
+        x: W / 2 + p.x * scale * (W / 2),
+        y: H / 2 - p.y * scale * (H / 2),
+        z: p.z, scale: scale,
+      };
+    }
+    function transformPoint(px, py, pz, orbitRotX, orbitRotZ, sceneRotX, sceneRotY) {
+      var p = { x: px, y: py, z: pz };
+      p = rotateX(p, orbitRotX);
+      p = rotateZ(p, orbitRotZ);
+      p = rotateX(p, sceneRotX);
+      p = rotateY(p, sceneRotY);
+      return p;
+    }
 
     // ── Mouse interaction ───────────────────────
     canvas.addEventListener('mousedown', function (e) {
-      drag.active = true; drag.sx = e.clientX; drag.sy = e.clientY;
+      dragActive = true; dragSX = e.clientX; dragSY = e.clientY;
     });
     document.addEventListener('mousemove', function (e) {
-      mouse.x = (e.clientX / window.innerWidth)  *  2 - 1;
-      mouse.y = (e.clientY / window.innerHeight) * -2 + 1;
-      if (!drag.active) return;
-      targetRot.y += (e.clientX - drag.sx) * 0.006;
-      targetRot.x += (e.clientY - drag.sy) * 0.006;
-      drag.sx = e.clientX; drag.sy = e.clientY;
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = (e.clientY / window.innerHeight) * -2 + 1;
+      if (!dragActive) return;
+      targetRotY += (e.clientX - dragSX) * 0.006;
+      targetRotX += (e.clientY - dragSY) * 0.006;
+      dragSX = e.clientX; dragSY = e.clientY;
     });
-    document.addEventListener('mouseup', function () { drag.active = false; });
+    document.addEventListener('mouseup', function () { dragActive = false; });
     canvas.addEventListener('click', function () { if (pulseTime < 0) pulseTime = 0; });
 
-    console.log('[Atom] Initialized successfully');
+    // ── Draw helpers ────────────────────────────
+    function drawGlowCircle(x, y, r, color, glowR, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = glowR;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
-    // ── Animation loop ──────────────────────────
-    function animateAtom(time) {
+    function drawOrbitPath(orbitCfg, sceneRotX, sceneRotY, pulseScale) {
+      ctx.save();
+      ctx.strokeStyle = orbitCfg.color;
+      ctx.globalAlpha = 0.25;
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = orbitCfg.color;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      var steps = 120;
+      for (var i = 0; i <= steps; i++) {
+        var a = (i / steps) * Math.PI * 2;
+        var px = Math.cos(a) * orbitCfg.rx * pulseScale;
+        var py = Math.sin(a) * orbitCfg.ry * pulseScale;
+        var p3 = transformPoint(px, py, 0, orbitCfg.rotX, orbitCfg.rotZ, sceneRotX, sceneRotY);
+        var p2 = project(p3);
+        if (i === 0) ctx.moveTo(p2.x, p2.y);
+        else ctx.lineTo(p2.x, p2.y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── Main render loop ────────────────────────
+    function render(time) {
       var dt = 0.016;
-      var t  = time * 0.001;
+      var t = time * 0.001;
+
+      ctx.clearRect(0, 0, W, H);
 
       // Pulse
       var pulseScale = 1;
       if (pulseTime >= 0) {
         pulseTime += dt;
-        pulsePhase = pulseTime / PULSE_DUR;
-        if (pulsePhase >= 1) { pulseTime = -1; pulsePhase = 0; }
-        pulseScale = 1 + 0.25 * Math.sin(pulsePhase * Math.PI) * (1 - pulsePhase);
+        var pp = pulseTime / PULSE_DUR;
+        if (pp >= 1) { pulseTime = -1; pp = 0; }
+        pulseScale = 1 + 0.25 * Math.sin(pp * Math.PI) * (1 - pp);
       }
 
-      // Scene rotation
-      targetRot.y += 0.003;
-      if (!drag.active) {
-        targetRot.x += (mouse.y * 0.15 - targetRot.x) * 0.02;
-        targetRot.y += (mouse.x * 0.1  - targetRot.y) * 0.005;
+      // Smooth rotation
+      targetRotY += 0.003;
+      if (!dragActive) {
+        targetRotX += (mouseY * 0.15 - targetRotX) * 0.02;
+        targetRotY += (mouseX * 0.1 - targetRotY) * 0.005;
       }
-      scene.rotation.x += (targetRot.x - scene.rotation.x) * 0.06;
-      scene.rotation.y += (targetRot.y - scene.rotation.y) * 0.06;
+      rotX += (targetRotX - rotX) * 0.06;
+      rotY += (targetRotY - rotY) * 0.06;
 
-      // Camera parallax
-      camera.position.x += (mouse.x * 0.25 - camera.position.x) * 0.03;
-      camera.position.y += (mouse.y * 0.15 - camera.position.y) * 0.03;
-      camera.lookAt(0, 0, 0);
-
-      // Nucleus pulse
-      if (nucleusMesh) {
-        nucleusMesh.scale.setScalar((1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01) * pulseScale);
-      }
-      glowShells.forEach(function (shell, i) {
-        shell.scale.setScalar((1 + i * 0.3) * pulseScale);
+      // Draw orbits
+      ORBITS.forEach(function (orb) {
+        drawOrbitPath(orb, rotX, rotY, pulseScale);
       });
 
-      // Orbit ring wobble
-      orbitRings.forEach(function (o) {
-        o.mesh.rotation.x = o.baseRotX + Math.sin(t * 0.3 + o.oi * 2.1) * 0.04;
-        o.mesh.rotation.z = o.baseRotZ + Math.cos(t * 0.25 + o.oi * 3.7) * 0.03;
-      });
+      // Draw trails + electrons
+      var drawList = [];
 
-      // Mouse proximity
-      var mouseProx = Math.max(0, 1 - Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y) / 1.5);
-
-      // Electrons + trails
       electrons.forEach(function (e) {
+        // Perturbed angle
         var speedNoise = Math.sin(t * e.speedVarFreq + e.seed) * e.speedVarAmp;
         var angle = t * (e.baseSpeed + speedNoise) + e.offset;
 
+        // Perturbed radius
         var rPert = Math.sin(t * e.rPertFreq1 + e.seed * 1.3) * e.rPertAmp1
                   + Math.sin(t * e.rPertFreq2 + e.seed * 2.9) * e.rPertAmp2;
         var rxP = (e.rx + rPert) * pulseScale;
         var ryP = (e.ry + rPert * 0.8) * pulseScale;
 
-        var distortX = mouseProx * mouse.x * 0.15;
-        var distortY = mouseProx * mouse.y * 0.12;
+        // Mouse distortion
+        var mouseProx = Math.max(0, 1 - Math.sqrt(mouseX * mouseX + mouseY * mouseY) / 1.5);
+        var distortX = mouseProx * mouseX * 0.15;
+        var distortY = mouseProx * mouseY * 0.12;
 
         var cx = Math.cos(angle) * rxP + distortX;
         var cy = Math.sin(angle) * ryP + distortY;
 
+        // Orbit wobble
         var wobbleX = Math.sin(t * 0.3 + e.seed * 0.01) * 0.04;
         var wobbleZ = Math.cos(t * 0.25 + e.seed * 0.015) * 0.03;
-        var rX = e.rotX + wobbleX;
-        var rZ = e.rotZ + wobbleZ;
 
-        var cX = Math.cos(rX), sX = Math.sin(rX);
-        var cZ = Math.cos(rZ), sZ = Math.sin(rZ);
-        var y1 = cy * cX;
-        var z1 = cy * sX;
-        var x2 = cx * cZ - y1 * sZ;
-        var y2 = cx * sZ + y1 * cZ;
+        var p3 = transformPoint(cx, cy, 0, e.rotX + wobbleX, e.rotZ + wobbleZ, rotX, rotY);
+        var p2 = project(p3);
 
-        // Clamp to prevent NaN
-        if (isNaN(x2)) x2 = 0;
-        if (isNaN(y2)) y2 = 0;
-        if (isNaN(z1)) z1 = 0;
+        // Store trail
+        e.trail.unshift({ x: p2.x, y: p2.y, z: p3.z });
+        if (e.trail.length > TRAIL_LEN) e.trail.pop();
 
-        e.mesh.position.set(x2, y2, z1);
-
-        // Trail: exponential decay with flicker
-        var p = e.tPos;
-        var c = e.tColor;
-        var orbCfg = ORBITS[Math.floor(e.seed / 100)] || ORBITS[0];
-        var col = new THREE.Color(orbCfg.color);
-
-        for (var i = p.length - 3; i >= 3; i -= 3) {
-          p[i] = p[i - 3]; p[i + 1] = p[i - 2]; p[i + 2] = p[i - 1];
+        // Draw trail (exponential decay)
+        if (e.trail.length > 1) {
+          for (var i = 1; i < e.trail.length; i++) {
+            var frac = i / TRAIL_LEN;
+            var alpha = Math.exp(-frac * 3.5) * 0.6 * e.trailFlicker;
+            if (alpha < 0.01) continue;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = e.color;
+            ctx.lineWidth = 2 * (1 - frac * 0.5);
+            ctx.shadowColor = e.color;
+            ctx.shadowBlur = 4;
+            ctx.beginPath();
+            ctx.moveTo(e.trail[i - 1].x, e.trail[i - 1].y);
+            ctx.lineTo(e.trail[i].x, e.trail[i].y);
+            ctx.stroke();
+            ctx.restore();
+          }
         }
-        for (var i = c.length - 4; i >= 4; i -= 4) {
-          c[i] = c[i - 4]; c[i + 1] = c[i - 3]; c[i + 2] = c[i - 2]; c[i + 3] = c[i - 1];
-        }
-        p[0] = x2; p[1] = y2; p[2] = z1;
 
-        e.tCount = Math.min(e.tCount + 1, TRAIL_LEN);
-        var flicker = e.trailFlicker + Math.sin(t * 8 + e.seed) * 0.15;
-        for (var i = 0; i < e.tCount; i++) {
-          var frac = i / TRAIL_LEN;
-          var expDecay = Math.exp(-frac * 3.5);
-          c[i * 4]     = col.r;
-          c[i * 4 + 1] = col.g;
-          c[i * 4 + 2] = col.b;
-          c[i * 4 + 3] = Math.max(0, expDecay * 0.7 * flicker);
-        }
-        e.trail.geometry.attributes.position.needsUpdate = true;
-        e.trail.geometry.attributes.color.needsUpdate = true;
-        e.trail.geometry.setDrawRange(0, e.tCount);
+        // Collect for depth sorting
+        drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale, color: e.color });
       });
 
-      // Labels — project to screen
-      labelEls.forEach(function (el, i) {
-        var cfg = LABELS[i];
-        if (!cfg) return;
-        var oc = ORBITS[cfg.orbit];
-        var la = cfg.angle;
-        var lx = Math.cos(la) * oc.rx;
-        var ly = Math.sin(la) * oc.ry;
-        var cX = Math.cos(oc.rotX), sX = Math.sin(oc.rotX);
-        var cZ = Math.cos(oc.rotZ), sZ = Math.sin(oc.rotZ);
-        var y1 = ly * cX; var z1 = ly * sX;
-        var x2 = lx * cZ - y1 * sZ;
-        var y2 = lx * sZ + y1 * cZ;
+      // Nucleus
+      var nucPulse = 1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01;
+      var nucScale = nucPulse * pulseScale;
+      var nuc3 = { x: 0, y: 0, z: 0 };
+      nuc3 = rotateX(nuc3, rotX);
+      nuc3 = rotateY(nuc3, rotY);
+      var nuc2 = project(nuc3);
+      drawList.push({ type: 'nucleus', x: nuc2.x, y: nuc2.y, z: nuc3.z, scale: nuc2.scale, r: nucScale });
 
-        var v = new THREE.Vector3(x2, y2, z1);
-        v.applyMatrix4(scene.matrixWorld);
-        v.project(camera);
+      // Depth sort (far first)
+      drawList.sort(function (a, b) { return (b.z + CAM_DIST) - (a.z + CAM_DIST); });
 
-        var screenX = (v.x * 0.5 + 0.5) * SIZE;
-        var screenY = (-v.y * 0.5 + 0.5) * SIZE;
-        var depthAlpha = Math.max(0.15, Math.min(1, 1.0 - v.z * 0.6));
-
-        if (!isNaN(screenX) && !isNaN(screenY)) {
-          el.style.left    = screenX + 'px';
-          el.style.top     = screenY + 'px';
-          el.style.opacity = depthAlpha.toFixed(2);
+      // Draw sorted
+      drawList.forEach(function (item) {
+        if (item.type === 'nucleus') {
+          var r = 8 * item.scale * item.r;
+          // Outer glow
+          drawGlowCircle(item.x, item.y, r * 3, '#3b82f6', 40, 0.06);
+          // Middle glow
+          drawGlowCircle(item.x, item.y, r * 2, '#3b82f6', 25, 0.12);
+          // Core
+          drawGlowCircle(item.x, item.y, r, '#60a5fa', 15, 0.9);
+        } else {
+          var er = 3.5 * item.scale;
+          drawGlowCircle(item.x, item.y, er * 2.5, item.color, 12, 0.15);
+          drawGlowCircle(item.x, item.y, er, '#ffffff', 8, 0.95);
         }
       });
 
-      renderer.render(scene, camera);
-      requestAnimationFrame(animateAtom);
+      // Labels
+      var labelData = [
+        { orbit: 0, angle: 0.8, el: null },
+        { orbit: 1, angle: 2.5, el: null },
+        { orbit: 2, angle: 4.2, el: null },
+      ];
+      var labelEls = document.querySelectorAll('.atom-label:not(.atom-label--nucleus)');
+      labelData.forEach(function (ld, i) {
+        if (!labelEls[i]) return;
+        var oc = ORBITS[ld.orbit];
+        var lx = Math.cos(ld.angle) * oc.rx;
+        var ly = Math.sin(ld.angle) * oc.ry;
+        var p3 = transformPoint(lx, ly, 0, oc.rotX, oc.rotZ, rotX, rotY);
+        var p2 = project(p3);
+        var depthAlpha = Math.max(0.15, Math.min(1, 1 - p3.z * 0.3));
+        labelEls[i].style.left = p2.x + 'px';
+        labelEls[i].style.top = p2.y + 'px';
+        labelEls[i].style.opacity = depthAlpha.toFixed(2);
+      });
+
+      requestAnimationFrame(render);
     }
 
-    // Start animation
-    requestAnimationFrame(animateAtom);
+    requestAnimationFrame(render);
+    console.log('[Atom] Canvas 2D initialized');
   })();
 
 
