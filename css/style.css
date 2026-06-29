@@ -524,6 +524,7 @@ em { font-style: normal; color: var(--accent); }
   position: relative;
   width: 400px;
   height: 400px;
+  justify-self: center;
 }
 
 #atom-canvas {
@@ -553,22 +554,21 @@ em { font-style: normal; color: var(--accent); }
 .atom-label {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  color: var(--accent);
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.05em;
   white-space: nowrap;
   transform: translate(-50%, -50%);
   opacity: 0.8;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
   user-select: none;
-  background: var(--bg-elevated);
-  padding: 2px 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border-accent);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  text-shadow: 0 0 6px var(--accent-glow);
+  background: none;
+  border: none;
+  padding: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
 }
 
 /* Nucleus center label */
@@ -1186,6 +1186,10 @@ em { font-style: normal; color: var(--accent); }
 }
 [data-theme="light"] .loader {
   background: var(--bg-deep);
+}
+[data-theme="light"] .atom-label {
+  color: rgba(10, 10, 10, 0.5);
+  text-shadow: 0 0 6px rgba(10, 10, 10, 0.15);
 }
 
 

@@ -391,13 +391,11 @@
     var FOV       = 3.5;
     var AMBIENT_N = 40;       // Background ambient particles
 
-    // Orbit configs: 5 orbits with distinct tilts in X, Y, Z
+    // Orbit configs: 3 orbits with distinct tilts in X, Y, Z (35% smaller)
     var ORBITS = [
-      { rx: 1.5, ry: 1.3, rotX: 0.15,            rotZ: 0,            speed: 0.35 }, // Orbit 1
-      { rx: 1.5, ry: 1.3, rotX: Math.PI / 4,     rotZ: Math.PI / 5,  speed: 0.50 }, // Orbit 2
-      { rx: 1.5, ry: 1.3, rotX: Math.PI / 2.2,   rotZ: -Math.PI / 4, speed: 0.40 }, // Orbit 3
-      { rx: 1.5, ry: 1.3, rotX: Math.PI * 3 / 4, rotZ: Math.PI / 3,  speed: 0.45 }, // Orbit 4
-      { rx: 1.5, ry: 1.3, rotX: Math.PI / 6,     rotZ: -Math.PI / 3, speed: 0.30 }, // Orbit 5
+      { rx: 0.98, ry: 0.85, rotX: 0.0,            rotZ: 0,            speed: 0.40 }, // Orbit 1 (0°)
+      { rx: 0.98, ry: 0.85, rotX: Math.PI / 3,    rotZ: Math.PI / 6,  speed: 0.50 }, // Orbit 2 (60°)
+      { rx: 0.98, ry: 0.85, rotX: Math.PI * 2 / 3,rotZ: -Math.PI / 5, speed: 0.45 }, // Orbit 3 (120°)
     ];
 
     // Ambient floating particles
@@ -412,9 +410,9 @@
       });
     }
 
-    // Electrons: distribution per orbit (1, 1, 2, 1, 2)
+    // Electrons: distribution per orbit (1, 1, 1)
     var electrons = [];
-    var eDistribution = [1, 1, 2, 1, 2];
+    var eDistribution = [1, 1, 1];
     ORBITS.forEach(function (cfg, oi) {
       var count = eDistribution[oi];
       for (var e = 0; e < count; e++) {
@@ -720,12 +718,12 @@
           });
 
         } else if (item.type === 'electron') {
-          var rOuter = 4 * item.scale;
-          var rInner = 2 * item.scale;
+          var rOuter = 6 * item.scale;
+          var rInner = 3 * item.scale;
 
           // Outer circle
           ctx.save();
-          ctx.fillStyle = 'rgba(' + atomRGB + ', 0.3)';
+          ctx.fillStyle = 'rgba(' + atomRGB + ', 0.4)';
           ctx.beginPath();
           ctx.arc(item.x, item.y, rOuter, 0, Math.PI * 2);
           ctx.fill();
