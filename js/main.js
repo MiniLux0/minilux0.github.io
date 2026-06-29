@@ -151,11 +151,9 @@
     var isLight = document.documentElement.getAttribute('data-theme') === 'light';
     var waveRGB = isLight ? '0, 0, 0' : '255, 255, 255';
     var layers = [
-      { amp: 90,  freq: 0.006, speed: 0.0006, alpha: 0.07, width: 2.2, color: waveRGB },
-      { amp: 65,  freq: 0.01,  speed: 0.001,  alpha: 0.05, width: 1.8, color: waveRGB },
-      { amp: 45,  freq: 0.015, speed: 0.0018, alpha: 0.04, width: 1.4, color: waveRGB },
-      { amp: 30,  freq: 0.022, speed: 0.0025, alpha: 0.03, width: 1,   color: waveRGB },
-      { amp: 110, freq: 0.004, speed: 0.0004, alpha: 0.02, width: 2.5, color: waveRGB },
+      { amp: 126, freq: 0.006, speed: 0.0006, alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 1 (amp+40%)
+      { amp: 91,  freq: 0.01,  speed: 0.001,  alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 2 (amp+40%)
+      { amp: 75,  freq: 0.008, speed: 0.0014, alpha: 0.18, width: 1.8, color: waveRGB }, // Wave 3 (new speed/phase)
     ];
 
     layers.forEach(function (layer) {
@@ -206,7 +204,7 @@
   var pWidth, pHeight, pDpr;
   var netParticles = [];
   var PARTICLE_COUNT = 60;
-  var CONNECTION_DIST = 140;
+  var CONNECTION_DIST = 112;
   var MAX_SPEED = 0.5;   // Maximum particle speed
   var CURSOR_RADIUS = 40; // Distance to trigger message
 
@@ -241,7 +239,7 @@
       netParticles.push({
         x: Math.random() * pWidth, y: Math.random() * pHeight,
         vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        r: Math.random() * 1.5 + 0.5,
+        r: Math.random() * 2.0 + 1.5,
         message: MESSAGES[i % MESSAGES.length],
         hovered: false,
         hoverAlpha: 0,
@@ -305,7 +303,7 @@
         var dy = netParticles[i].y - netParticles[j].y;
         var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < CONNECTION_DIST) {
-          var alpha = (1 - dist / CONNECTION_DIST) * 0.15;
+          var alpha = (1 - dist / CONNECTION_DIST) * 0.25;
           particleCtx.beginPath();
           particleCtx.moveTo(netParticles[i].x, netParticles[i].y);
           particleCtx.lineTo(netParticles[j].x, netParticles[j].y);
@@ -336,7 +334,7 @@
       // Normal dot
       particleCtx.beginPath();
       particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      particleCtx.fillStyle = isLight ? 'rgba(26, 26, 26, 0.55)' : 'rgba(192, 192, 192, 0.35)';
+      particleCtx.fillStyle = isLight ? 'rgba(26, 26, 26, 0.85)' : 'rgba(192, 192, 192, 0.65)';
       particleCtx.fill();
 
       // Message bubble
