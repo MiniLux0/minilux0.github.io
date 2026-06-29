@@ -398,7 +398,7 @@
     });
     resizeObserver.observe(parent);
 
-    var CAM_DIST  = 6;
+    var CAM_DIST  = 3.5;
     var FOV       = 3.5;
 
     // Orbit configs: 3 orbits with angles of inclination (rotX, rotZ)
@@ -443,13 +443,13 @@
       var c = Math.cos(a), s = Math.sin(a);
       return { x: p.x * c - p.y * s, y: p.x * s + p.y * c, z: p.z };
     }
-    function project(p, cx, cy) {
+    function project(p, cx, cy, rBase) {
       var z = p.z + CAM_DIST;
       if (z < 0.1) z = 0.1;
       var scale = FOV / z;
       return {
-        x: cx + p.x * scale * cx,
-        y: cy - p.y * scale * cy,
+        x: cx + p.x * scale * rBase,
+        y: cy - p.y * scale * rBase,
         z: p.z, scale: scale,
       };
     }
@@ -543,11 +543,11 @@
         ctx.beginPath();
         for (var i = 0; i <= 100; i++) {
           var a = (i / 100) * Math.PI * 2;
-          // Elliptical orbits: rx = rBase, ry = rBase * 0.85
-          var px = Math.cos(a) * rBase;
-          var py = Math.sin(a) * rBase * 0.85;
+          // Elliptical orbits: rx = 1.0, ry = 0.85 in normalized space
+          var px = Math.cos(a);
+          var py = Math.sin(a) * 0.85;
           var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, currentRotX, currentRotY);
-          var p2 = project(p3, cx, cy);
+          var p2 = project(p3, cx, cy, rBase);
           if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
         }
         ctx.closePath();
@@ -563,14 +563,12 @@
         var speedNoise = Math.sin(t * 2 + e.seed) * 0.15;
         var angle = t * e.baseSpeed + speedNoise + e.offset;
 
-        var rxP = rBase;
-        var ryP = rBase * 0.85;
-
-        var cxE = Math.cos(angle) * rxP;
-        var cyE = Math.sin(angle) * ryP;
+        // Normalized coordinate space
+        var cxE = Math.cos(angle);
+        var cyE = Math.sin(angle) * 0.85;
 
         var p3 = transformPoint(cxE, cyE, 0, e.rotX, e.rotZ, currentRotX, currentRotY);
-        var p2 = project(p3, cx, cy);
+        var p2 = project(p3, cx, cy, rBase);
 
         // Store trail
         e.trail.unshift({ x: p2.x, y: p2.y });
@@ -898,8 +896,8 @@
   // Active Nav Highlight & Nav Frosted Glass on Scroll (Optimized)
   // ============================================
   var sections = document.querySelectorAll('.section, .hero');
-  var navLinkEls = document.querySelectorAll('.nav__link');
-  var nav = document.getElementById('nav');
+  navLinkEls = document.querySelectorAll('.nav__link');
+  nav = document.getElementById('nav');
 
   function updateActiveNav() {
     var current = '';

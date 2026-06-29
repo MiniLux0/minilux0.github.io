@@ -1177,12 +1177,7 @@ em { font-style: normal; color: var(--accent); }
   line-height: 1.6;
   margin-bottom: 1rem;
 }
-.blog-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
+
 .blog-card__status {
   font-family: var(--font-mono);
   font-size: 0.75rem;
