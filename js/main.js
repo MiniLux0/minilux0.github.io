@@ -67,15 +67,13 @@
       p.y += p.vy;
       p.vy -= 0.003;
 
-      var mixR = Math.round(59 + (13 - 59) * t);
-      var mixG = Math.round(130 + (148 - 130) * t);
-      var mixB = Math.round(246 + (136 - 246) * t);
-
-      cursorCtx.shadowColor = 'rgba(' + mixR + ',' + mixG + ',' + mixB + ',' + (alpha * 0.6) + ')';
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var trailRGB = isLight ? '0, 0, 0' : '255, 255, 255';
+      cursorCtx.shadowColor = 'rgba(' + trailRGB + ', ' + (alpha * 0.4) + ')';
       cursorCtx.shadowBlur = 8;
       cursorCtx.beginPath();
       cursorCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      cursorCtx.fillStyle = 'rgba(' + mixR + ',' + mixG + ',' + mixB + ',' + alpha + ')';
+      cursorCtx.fillStyle = 'rgba(' + trailRGB + ', ' + (alpha * 0.6) + ')';
       cursorCtx.fill();
       cursorCtx.shadowBlur = 0;
     }
@@ -84,11 +82,14 @@
     var dotGlow = cursorHovering ? 18 : 8;
     var dotAlpha = cursorHovering ? 1 : 0.9;
 
-    cursorCtx.shadowColor = 'rgba(59, 130, 246, 0.6)';
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var glowRGB = isLight ? '26, 26, 26' : '192, 192, 192';
+    var cursorColor = isLight ? 'rgba(26, 26, 26, ' + dotAlpha + ')' : 'rgba(255, 255, 255, ' + dotAlpha + ')';
+    cursorCtx.shadowColor = 'rgba(' + glowRGB + ', 0.6)';
     cursorCtx.shadowBlur = dotGlow;
     cursorCtx.beginPath();
     cursorCtx.arc(cursorX, cursorY, cursorDotRadius, 0, Math.PI * 2);
-    cursorCtx.fillStyle = 'rgba(59, 130, 246, ' + dotAlpha + ')';
+    cursorCtx.fillStyle = cursorColor;
     cursorCtx.fill();
     cursorCtx.shadowBlur = 0;
   }
@@ -147,12 +148,14 @@
     var mouseOffset = (mouseX - 0.5) * 50;
     var mouseAmpMod = 1 + (mouseY - 0.5) * 0.4;
 
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    var waveRGB = isLight ? '0, 0, 0' : '255, 255, 255';
     var layers = [
-      { amp: 90,  freq: 0.006, speed: 0.0006, alpha: 0.35, width: 2.2, color: '59,130,246' },
-      { amp: 65,  freq: 0.01,  speed: 0.001,  alpha: 0.28, width: 1.8, color: '59,130,246' },
-      { amp: 45,  freq: 0.015, speed: 0.0018, alpha: 0.22, width: 1.4, color: '20,184,166' },
-      { amp: 30,  freq: 0.022, speed: 0.0025, alpha: 0.15, width: 1,   color: '20,184,166' },
-      { amp: 110, freq: 0.004, speed: 0.0004, alpha: 0.12, width: 2.5, color: '59,130,246' },
+      { amp: 90,  freq: 0.006, speed: 0.0006, alpha: 0.07, width: 2.2, color: waveRGB },
+      { amp: 65,  freq: 0.01,  speed: 0.001,  alpha: 0.05, width: 1.8, color: waveRGB },
+      { amp: 45,  freq: 0.015, speed: 0.0018, alpha: 0.04, width: 1.4, color: waveRGB },
+      { amp: 30,  freq: 0.022, speed: 0.0025, alpha: 0.03, width: 1,   color: waveRGB },
+      { amp: 110, freq: 0.004, speed: 0.0004, alpha: 0.02, width: 2.5, color: waveRGB },
     ];
 
     layers.forEach(function (layer) {
@@ -184,11 +187,11 @@
       var pulse = 0.3 + 0.7 * Math.abs(Math.sin(time * 0.002 + i * 0.5));
       waveCtx.beginPath();
       waveCtx.arc(px, py, 2.5 * pulse, 0, Math.PI * 2);
-      waveCtx.fillStyle = 'rgba(59, 130, 246, ' + (0.5 * pulse) + ')';
+      waveCtx.fillStyle = 'rgba(' + waveRGB + ', ' + (0.05 * pulse) + ')';
       waveCtx.fill();
       waveCtx.beginPath();
       waveCtx.arc(px, py, 6 * pulse, 0, Math.PI * 2);
-      waveCtx.strokeStyle = 'rgba(59, 130, 246, ' + (0.12 * pulse) + ')';
+      waveCtx.strokeStyle = 'rgba(' + waveRGB + ', ' + (0.02 * pulse) + ')';
       waveCtx.lineWidth = 0.5;
       waveCtx.stroke();
     }
@@ -306,7 +309,7 @@
           particleCtx.beginPath();
           particleCtx.moveTo(netParticles[i].x, netParticles[i].y);
           particleCtx.lineTo(netParticles[j].x, netParticles[j].y);
-          particleCtx.strokeStyle = isLight ? 'rgba(30, 64, 175, ' + (alpha * 1.8) + ')' : 'rgba(59, 130, 246, ' + alpha + ')';
+          particleCtx.strokeStyle = isLight ? 'rgba(26, 26, 26, ' + (alpha * 1.8) + ')' : 'rgba(192, 192, 192, ' + alpha + ')';
           particleCtx.lineWidth = 0.6;
           particleCtx.stroke();
         }
@@ -321,9 +324,9 @@
       if (p.hoverAlpha > 0) {
         particleCtx.save();
         particleCtx.globalAlpha = p.hoverAlpha * 0.4;
-        particleCtx.shadowColor = isLight ? '#1e40af' : '#3b82f6';
+        particleCtx.shadowColor = isLight ? '#1a1a1a' : '#c0c0c0';
         particleCtx.shadowBlur = 15;
-        particleCtx.fillStyle = isLight ? '#1e40af' : '#3b82f6';
+        particleCtx.fillStyle = isLight ? '#1a1a1a' : '#c0c0c0';
         particleCtx.beginPath();
         particleCtx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
         particleCtx.fill();
@@ -333,7 +336,7 @@
       // Normal dot
       particleCtx.beginPath();
       particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      particleCtx.fillStyle = isLight ? 'rgba(30, 64, 175, 0.55)' : 'rgba(59, 130, 246, 0.35)';
+      particleCtx.fillStyle = isLight ? 'rgba(26, 26, 26, 0.55)' : 'rgba(192, 192, 192, 0.35)';
       particleCtx.fill();
 
       // Message bubble
@@ -348,7 +351,7 @@
         var msgY = p.y - p.r - msgH - 6;
 
         particleCtx.fillStyle = isLight ? 'rgba(238, 241, 246, 0.95)' : 'rgba(6, 10, 20, 0.85)';
-        particleCtx.shadowColor = isLight ? 'rgba(30, 64, 175, 0.3)' : '#3b82f6';
+        particleCtx.shadowColor = isLight ? 'rgba(26, 26, 26, 0.3)' : '#c0c0c0';
         particleCtx.shadowBlur = 8;
         particleCtx.beginPath();
         particleCtx.roundRect(msgX, msgY, msgW, msgH, 4);
@@ -356,12 +359,12 @@
 
         // Border
         particleCtx.shadowBlur = 0;
-        particleCtx.strokeStyle = isLight ? 'rgba(30, 64, 175, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+        particleCtx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.4)' : 'rgba(192, 192, 192, 0.4)';
         particleCtx.lineWidth = 0.5;
         particleCtx.stroke();
 
         // Text
-        particleCtx.fillStyle = isLight ? '#1e40af' : '#60a5fa';
+        particleCtx.fillStyle = isLight ? '#1a1a1a' : '#ffffff';
         particleCtx.font = '11px "JetBrains Mono", monospace';
         particleCtx.textAlign = 'center';
         particleCtx.textBaseline = 'middle';
@@ -395,9 +398,9 @@
 
     // Orbit configs
     var ORBITS = [
-      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            speed: 0.40, color: '#3b82f6' },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  speed: 0.55, color: '#38bdf8' },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, speed: 0.35, color: '#60a5fa' },
+      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            speed: 0.40, color: '#c0c0c0' },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  speed: 0.55, color: '#888888' },
+      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, speed: 0.35, color: '#a8a8a8' },
     ];
 
     // Ambient floating particles
@@ -519,8 +522,8 @@
         var flicker = 0.5 + 0.5 * Math.sin(t * 1.5 + ap.pulse);
         ctx.save();
         ctx.globalAlpha = ap.alpha * flicker;
-        ctx.fillStyle = isLight ? '#1e40af' : '#3b82f6';
-        ctx.shadowColor = isLight ? '#1e40af' : '#3b82f6';
+        ctx.fillStyle = isLight ? '#1a1a1a' : '#c0c0c0';
+        ctx.shadowColor = isLight ? '#1a1a1a' : '#c0c0c0';
         ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(ap.x, ap.y, ap.r, 0, Math.PI * 2);
@@ -550,9 +553,9 @@
       ORBITS.forEach(function (orb) {
         var orbColor = orb.color;
         if (isLight) {
-          if (orb.color === '#3b82f6') orbColor = '#1d4ed8';
-          else if (orb.color === '#38bdf8') orbColor = '#0369a1';
-          else if (orb.color === '#60a5fa') orbColor = '#1e3a8a';
+          if (orb.color === '#c0c0c0') orbColor = '#1a1a1a';
+          else if (orb.color === '#888888') orbColor = '#444444';
+          else if (orb.color === '#a8a8a8') orbColor = '#333333';
         }
 
         // Glow pass (wider, fainter)
@@ -620,9 +623,9 @@
         // Resolve electron color based on theme
         var electronColor = e.color;
         if (isLight) {
-          if (e.color === '#3b82f6') electronColor = '#1d4ed8';
-          else if (e.color === '#38bdf8') electronColor = '#0369a1';
-          else if (e.color === '#60a5fa') electronColor = '#1e3a8a';
+          if (e.color === '#c0c0c0') electronColor = '#1a1a1a';
+          else if (e.color === '#888888') electronColor = '#444444';
+          else if (e.color === '#a8a8a8') electronColor = '#333333';
         }
 
         // Store trail
@@ -688,11 +691,11 @@
           if (isLight) {
             drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.2);
             drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.35);
-            drawGlowCircle(item.x, item.y, er, '#1e3a8a', 8, 0.95);
+            drawGlowCircle(item.x, item.y, er, '#1a1a1a', 8, 0.95);
           } else {
             drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.1);
             drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.25);
-            drawGlowCircle(item.x, item.y, er, '#ffffff', 8, 0.95);
+            drawGlowCircle(item.x, item.y, er, '#c0c0c0', 8, 0.95);
           }
         }
       });
