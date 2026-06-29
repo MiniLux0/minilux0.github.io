@@ -14,6 +14,7 @@
   --bg-deep:       #060a14;
   --bg-surface:    #0c1220;
   --bg-elevated:   #111a2e;
+  --bg-nav-mobile: rgba(6, 10, 20, 0.95);
   --text-primary:  #e8eaf0;
   --text-muted:    #6b7d96;
   --accent:        #3b82f6;
@@ -231,6 +232,7 @@ em { font-style: normal; color: var(--accent); }
   height: 100%;
   z-index: 1;
   opacity: 0.85;
+  transition: transform 0.15s ease-out;
 }
 
 .hero__particles {
@@ -240,6 +242,7 @@ em { font-style: normal; color: var(--accent); }
   height: 100%;
   z-index: 1;
   opacity: 0.5;
+  transition: transform 0.15s ease-out;
 }
 
 /* Dot grid background */
@@ -252,6 +255,18 @@ em { font-style: normal; color: var(--accent); }
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%);
+  transition: transform 0.15s ease-out;
+}
+
+.hero__aurora-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease-out;
 }
 
 /* Aurora blob behind text */
@@ -283,6 +298,7 @@ em { font-style: normal; color: var(--accent); }
   z-index: 2;
   text-align: center;
   padding: 0 1.5rem;
+  transition: transform 0.15s ease-out;
 }
 
 .hero__greeting {
@@ -513,9 +529,17 @@ em { font-style: normal; color: var(--accent); }
   height: 400px;
   cursor: grab;
   filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.3));
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 #atom-canvas:active {
   cursor: grabbing;
+}
+#atom-canvas.reveal {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .atom-labels {
@@ -1120,6 +1144,7 @@ em { font-style: normal; color: var(--accent); }
   --bg-deep:       #f8f9fb;
   --bg-surface:    #eef1f6;
   --bg-elevated:   #ffffff;
+  --bg-nav-mobile: rgba(248, 249, 251, 0.95);
   --text-primary:  #1a1d26;
   --text-muted:    #5a6478;
   --border:        rgba(0, 0, 0, 0.08);
@@ -1183,7 +1208,7 @@ em { font-style: normal; color: var(--accent); }
     top: var(--nav-h);
     left: 0;
     right: 0;
-    background: rgba(6, 10, 20, 0.95);
+    background: var(--bg-nav-mobile);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     flex-direction: column;

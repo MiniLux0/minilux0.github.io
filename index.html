@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú</title>
+  <meta name="theme-color" content="#060a14">
+  <title data-en="Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú" data-es="Minilux (MiniLux0) — Física y Ciencia Computacional | UNI Lima Perú">Minilux (MiniLux0) — Física y Ciencia Computacional | UNI Lima Perú</title>
   <meta name="description" content="Jesus Rodolfo Vera Vivanco, known as Minilux (MiniLux0), is a physics student at Universidad Nacional de Ingeniería (UNI), Lima, Perú, exploring computational physics, quantum computing, and machine learning through C++ and Python.">
   <meta name="keywords" content="Minilux, MiniLux0, Jesus Vera, Jesus Vera Vivanco, Jesus Rodolfo Vera Vivanco, physics student Peru, computational physics Lima, quantum computing student, C++ physics, UNI Lima fisica, fisica computacional Peru, machine learning physics">
   <meta name="author" content="Jesus Vera">
   <link rel="canonical" href="https://minilux0.github.io">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/gif" href="favicon.gif">
+  <link rel="shortcut icon" type="image/gif" href="favicon.gif">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú">
@@ -35,7 +37,7 @@
     "familyName": "Vera Vivanco",
     "alternateName": ["MiniLux0", "Jesus Vera", "Jesus Rodolfo Vera Vivanco"],
     "url": "https://minilux0.github.io",
-    "sameAs": ["https://github.com/MiniLux0"],
+    "sameAs": ["https://github.com/MiniLux0", "https://discord.com/users/minilux."],
     "jobTitle": "Physics Student",
     "affiliation": {
       "@type": "CollegeOrUniversity",
@@ -68,14 +70,14 @@
 
   <!-- Navigation -->
   <nav class="nav" id="nav">
-    <a href="#hero" class="nav__logo">M</a>
+    <a href="#hero" class="nav__logo"><img src="favicon.gif" alt="Minilux logo" style="height: 32px; width: auto;"></a>
     <ul class="nav__links">
       <li><a href="#about" class="nav__link" data-section="about" data-en="About" data-es="Sobre Mí">Sobre Mí</a></li>
       <li><a href="#projects" class="nav__link" data-section="projects" data-en="Projects" data-es="Proyectos">Proyectos</a></li>
+      <li><a href="#blog" class="nav__link" data-section="blog" data-en="Blog" data-es="Blog">Blog</a></li>
       <li><a href="#skills" class="nav__link" data-section="skills" data-en="Skills" data-es="Habilidades">Habilidades</a></li>
       <li><a href="#education" class="nav__link" data-section="education" data-en="Education" data-es="Educación">Educación</a></li>
       <li><a href="#contact" class="nav__link" data-section="contact" data-en="Contact" data-es="Contacto">Contacto</a></li>
-      <li><a href="#blog" class="nav__link" data-section="blog" data-en="Blog" data-es="Blog">Blog</a></li>
     </ul>
     <div class="nav__controls">
       <button class="nav__btn" id="lang-toggle" aria-label="Toggle language">
@@ -96,7 +98,9 @@
     <canvas class="hero__canvas" id="wave-canvas"></canvas>
     <canvas class="hero__particles" id="particle-canvas"></canvas>
     <div class="hero__grid"></div>
-    <div class="hero__aurora"></div>
+    <div class="hero__aurora-wrap">
+      <div class="hero__aurora"></div>
+    </div>
     <div class="hero__content">
       <p class="hero__greeting" data-en="Hello, I'm" data-es="Hola, soy">Hola, soy</p>
       <h1 class="hero__name" data-text="Minilux">Minilux</h1>
@@ -105,7 +109,7 @@
       <a href="#" class="hero__cta hero__cta--outline" id="cv-download" data-en="Download CV" data-es="Descargar CV">Descargar CV</a>
     </div>
     <div class="hero__scroll-hint">
-      <span>scroll</span>
+      <span data-en="scroll" data-es="deslizar">deslizar</span>
       <div class="hero__scroll-line"></div>
     </div>
   </section>
@@ -116,27 +120,23 @@
       <h2 class="section__title" data-en="About" data-es="Sobre Mí">Sobre Mí</h2>
       <div class="about__grid">
         <div class="about__text">
-          <p>
-            I'm a physics student at <strong>Universidad Nacional de Ingeniería (UNI)</strong> in Lima, Perú,
-            driven by curiosity about the computational underpinnings of physical systems.
+          <p data-en="I'm a physics student at <strong>Universidad Nacional de Ingeniería (UNI)</strong> in Lima, Perú, driven by curiosity about the computational underpinnings of physical systems." data-es="Soy estudiante de física en la <strong>Universidad Nacional de Ingeniería (UNI)</strong> en Lima, Perú, motivado por la curiosidad sobre las bases computacionales de los sistemas físicos.">
+            Soy estudiante de física en la <strong>Universidad Nacional de Ingeniería (UNI)</strong> en Lima, Perú, motivado por la curiosidad sobre las bases computacionales de los sistemas físicos.
           </p>
-          <p>
-            My interests sit at the intersection of <em>computational physics</em>, <em>quantum computing</em>,
-            and <em>machine learning</em> — exploring how algorithms can simulate, predict, and reveal
-            the behavior of complex systems.
+          <p data-en="My interests sit at the intersection of <em>computational physics</em>, <em>quantum computing</em>, and <em>machine learning</em> — exploring how algorithms can simulate, predict, and reveal the behavior of complex systems." data-es="Mis intereses se encuentran en la intersección de la <em>física computacional</em>, la <em>computación cuántica</em> y el <em>aprendizaje automático</em>, explorando cómo los algoritmos pueden simular, predecir y revelar el comportamiento de sistemas complejos.">
+            Mis intereses se encuentran en la intersección de la <em>física computacional</em>, la <em>computación cuántica</em> y el <em>aprendizaje automático</em>, explorando cómo los algoritmos pueden simular, predecir y revelar el comportamiento de sistemas complejos.
           </p>
-          <p>
-            I work primarily in <strong>C++</strong> for performance-critical simulations and use <strong>LaTeX</strong>
-            for scientific documentation and academic reports.
+          <p data-en="I work primarily in <strong>C++</strong> for performance-critical simulations and use <strong>LaTeX</strong> for scientific documentation and academic reports." data-es="Trabajo principalmente en <strong>C++</strong> para simulaciones de rendimiento crítico y utilizo <strong>LaTeX</strong> para documentación científica y reportes académicos.">
+            Trabajo principalmente en <strong>C++</strong> para simulaciones de rendimiento crítico y utilizo <strong>LaTeX</strong> para documentación científica y reportes académicos.
           </p>
         </div>
         <div class="about__diagram">
           <canvas id="atom-canvas"></canvas>
           <div class="atom-labels" id="atom-labels">
-            <span class="atom-label atom-label--nucleus">Physics</span>
-            <span class="atom-label" data-orbit="0">Computational Physics</span>
-            <span class="atom-label" data-orbit="1">Quantum Computing</span>
-            <span class="atom-label" data-orbit="2">Machine Learning</span>
+            <span class="atom-label atom-label--nucleus" data-en="Physics" data-es="Física">Física</span>
+            <span class="atom-label" data-orbit="0" data-en="Computational Physics" data-es="Física Computacional">Física Computacional</span>
+            <span class="atom-label" data-orbit="1" data-en="Quantum Computing" data-es="Computación Cuántica">Computación Cuántica</span>
+            <span class="atom-label" data-orbit="2" data-en="Machine Learning" data-es="Aprendizaje Automático">Aprendizaje Automático</span>
           </div>
         </div>
       </div>
@@ -154,14 +154,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           </div>
           <h3 class="card__title">LearningCpp</h3>
-          <p class="card__desc">A structured repository documenting my journey learning C++ — from fundamentals to advanced topics like templates, memory management, and STL.</p>
+          <p class="card__desc" data-en="A structured repository documenting my journey learning C++ — from fundamentals to advanced topics like templates, memory management, and STL." data-es="Un repositorio estructurado que documenta mi camino de aprendizaje en C++ — desde los fundamentos hasta temas avanzados como plantillas, gestión de memoria y la STL.">Un repositorio estructurado que documenta mi camino de aprendizaje en C++ — desde los fundamentos hasta temas avanzados como plantillas, gestión de memoria y la STL.</p>
           <div class="card__tags">
             <span class="tag">C++</span>
-            <span class="tag">Algorithms</span>
-            <span class="tag">OOP</span>
+            <span class="tag" data-en="Algorithms" data-es="Algoritmos">Algoritmos</span>
+            <span class="tag" data-en="OOP" data-es="POO">POO</span>
           </div>
           <a href="https://github.com/MiniLux0/LearningCpp" class="card__link" target="_blank" rel="noopener">
-            View on GitHub
+            <span data-en="View on GitHub" data-es="Ver en GitHub">Ver en GitHub</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
         </article>
@@ -171,14 +171,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
           <h3 class="card__title">Physics-Reports</h3>
-          <p class="card__desc">Collection of academic reports and lab documentation written in LaTeX, covering mechanics, electromagnetism, and modern physics experiments.</p>
+          <p class="card__desc" data-en="Collection of academic reports and lab documentation written in LaTeX, covering mechanics, electromagnetism, and modern physics experiments." data-es="Colección de reportes académicos y documentación de laboratorio escritos en LaTeX, abarcando experimentos de mecánica, electromagnetismo y física moderna.">Colección de reportes académicos y documentación de laboratorio escritos en LaTeX, abarcando experimentos de mecánica, electromagnetismo y física moderna.</p>
           <div class="card__tags">
             <span class="tag">LaTeX</span>
-            <span class="tag">Physics</span>
-            <span class="tag">Reports</span>
+            <span class="tag" data-en="Physics" data-es="Física">Física</span>
+            <span class="tag" data-en="Reports" data-es="Reportes">Reportes</span>
           </div>
           <a href="https://github.com/MiniLux0/Physics-Reports" class="card__link" target="_blank" rel="noopener">
-            View on GitHub
+            <span data-en="View on GitHub" data-es="Ver en GitHub">Ver en GitHub</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
         </article>
@@ -187,15 +187,15 @@
           <div class="card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
           </div>
-          <h3 class="card__title">Quantum Computing</h3>
-          <p class="card__desc">Explorations in quantum algorithms, gate-based simulations, and quantum machine learning. Coming soon.</p>
+          <h3 class="card__title" data-en="Quantum Computing" data-es="Computación Cuántica">Computación Cuántica</h3>
+          <p class="card__desc" data-en="Explorations in quantum algorithms, gate-based simulations, and quantum machine learning. Coming soon." data-es="Exploraciones en algoritmos cuánticos, simulaciones basadas en compuertas y aprendizaje automático cuántico. Próximamente.">Exploraciones en algoritmos cuánticos, simulaciones basadas en compuertas y aprendizaje automático cuántico. Próximamente.</p>
           <div class="card__tags">
-            <span class="tag">Quantum</span>
+            <span class="tag" data-en="Quantum" data-es="Cuántica">Cuántica</span>
             <span class="tag">Python</span>
-            <span class="tag">Coming Soon</span>
+            <span class="tag" data-en="Coming Soon" data-es="Próximamente">Próximamente</span>
           </div>
           <span class="card__link card__link--disabled">
-            Coming Soon
+            <span data-en="Coming Soon" data-es="Próximamente">Próximamente</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </span>
         </article>
@@ -204,23 +204,81 @@
     </div>
   </section>
 
+  <!-- Blog -->
+  <section class="section" id="blog">
+    <div class="container section__inner">
+      <h2 class="section__title" data-en="Blog" data-es="Blog">Blog</h2>
+      <div class="blog__grid">
+
+        <article class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span class="blog-card__date" data-en="June 2026" data-es="Junio 2026">Junio 2026</span>
+          <h3 class="card__title" data-en="Deriving the moment of inertia of a solid cone" data-es="Derivando el momento de inercia de un cono sólido">Derivando el momento de inercia de un cono sólido</h3>
+          <p class="card__desc" data-en="A step-by-step mathematical derivation using cylindrical coordinates and triple integration for physics students." data-es="Una derivación matemática paso a paso utilizando coordenadas cilíndricas e integración triple para estudiantes de física.">Una derivación matemática paso a paso utilizando coordenadas cilíndricas e integración triple para estudiantes de física.</p>
+          <div class="card__tags">
+            <span class="tag" data-en="Physics" data-es="Física">Física</span>
+          </div>
+          <a href="#" class="card__link">
+            <span data-en="Read More" data-es="Leer más">Leer más</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <span class="blog-card__date" data-en="May 2026" data-es="Mayo 2026">Mayo 2026</span>
+          <h3 class="card__title" data-en="Deep copy vs shallow copy in C++" data-es="Deep copy vs shallow copy en C++">Deep copy vs shallow copy en C++</h3>
+          <p class="card__desc" data-en="Understanding dynamic memory allocation, copy constructors, and assignment operators in C++." data-es="Comprendiendo la asignación dinámica de memoria, constructores de copia y operadores de asignación en C++.">Comprendiendo la asignación dinámica de memoria, constructores de copia y operadores de asignación en C++.</p>
+          <div class="card__tags">
+            <span class="tag">C++</span>
+          </div>
+          <a href="#" class="card__link">
+            <span data-en="Read More" data-es="Leer más">Leer más</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+          <span class="blog-card__date" data-en="April 2026" data-es="Abril 2026">Abril 2026</span>
+          <h3 class="card__title" data-en="Vector spaces: geometric intuition" data-es="Espacios vectoriales: intuición geométrica">Espacios vectoriales: intuición geométrica</h3>
+          <p class="card__desc" data-en="A geometric visualization of linear algebra concepts like span, basis, and dimensions." data-es="Una visualización geométrica de conceptos de álgebra lineal como span (generador), bases y dimensiones.">Una visualización geométrica de conceptos de álgebra lineal como span (generador), bases y dimensiones.</p>
+          <div class="card__tags">
+            <span class="tag" data-en="Math" data-es="Matemáticas">Matemáticas</span>
+          </div>
+          <a href="#" class="card__link">
+            <span data-en="Read More" data-es="Leer más">Leer más</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
   <!-- Skills -->
-  <section class="section" id="skills">
+  <section class="section section--alt" id="skills">
     <div class="container section__inner">
       <h2 class="section__title" data-en="Skills" data-es="Habilidades">Habilidades</h2>
       <div class="skills__groups">
 
         <div class="skills__group">
-          <h3 class="skills__group-title">Languages</h3>
+          <h3 class="skills__group-title" data-en="Languages" data-es="Lenguajes">Lenguajes</h3>
           <div class="skills__tags">
             <span class="skill-tag">C++</span>
-            <span class="skill-tag">Python <small>(coming soon)</small></span>
+            <span class="skill-tag" data-en="Python <small>(coming soon)</small>" data-es="Python <small>(próximamente)</small>">Python <small>(próximamente)</small></span>
             <span class="skill-tag">LaTeX</span>
           </div>
         </div>
 
         <div class="skills__group">
-          <h3 class="skills__group-title">Tools</h3>
+          <h3 class="skills__group-title" data-en="Tools" data-es="Herramientas">Herramientas</h3>
           <div class="skills__tags">
             <span class="skill-tag">Git</span>
             <span class="skill-tag">VSCode</span>
@@ -229,11 +287,11 @@
         </div>
 
         <div class="skills__group">
-          <h3 class="skills__group-title">Domains</h3>
+          <h3 class="skills__group-title" data-en="Domains" data-es="Áreas">Áreas</h3>
           <div class="skills__tags">
-            <span class="skill-tag">Computational Physics</span>
-            <span class="skill-tag">Quantum Computing</span>
-            <span class="skill-tag">Machine Learning</span>
+            <span class="skill-tag" data-en="Computational Physics" data-es="Física Computacional">Física Computacional</span>
+            <span class="skill-tag" data-en="Quantum Computing" data-es="Computación Cuántica">Computación Cuántica</span>
+            <span class="skill-tag" data-en="Machine Learning" data-es="Aprendizaje Automático">Aprendizaje Automático</span>
           </div>
         </div>
 
@@ -242,7 +300,7 @@
   </section>
 
   <!-- Education / Timeline -->
-  <section class="section section--alt" id="education">
+  <section class="section" id="education">
     <div class="container section__inner">
       <h2 class="section__title" data-en="Education" data-es="Educación">Educación</h2>
       <div class="timeline">
@@ -250,10 +308,10 @@
         <div class="timeline__item">
           <div class="timeline__marker"></div>
           <div class="timeline__content">
-            <span class="timeline__year">2024 — Present</span>
-            <h3 class="timeline__heading">Universidad Nacional de Ingeniería (UNI)</h3>
-            <p class="timeline__location">Lima, Perú</p>
-            <p class="timeline__desc">B.Sc. in Physics — Currently in 2nd year. Focused on mathematical methods, classical mechanics, and computational approaches to physical systems.</p>
+            <span class="timeline__year" data-en="2024 — Present" data-es="2024 — Presente">2024 — Presente</span>
+            <h3 class="timeline__heading" data-en="Universidad Nacional de Ingeniería (UNI)" data-es="Universidad Nacional de Ingeniería (UNI)">Universidad Nacional de Ingeniería (UNI)</h3>
+            <p class="timeline__location" data-en="Lima, Perú" data-es="Lima, Perú">Lima, Perú</p>
+            <p class="timeline__desc" data-en="B.Sc. in Physics — Currently in 2nd year. Focused on mathematical methods, classical mechanics, and computational approaches to physical systems." data-es="Licenciatura en Física — Actualmente en 2º año. Enfocado en métodos matemáticos, mecánica clásica y enfoques computacionales para sistemas físicos.">Licenciatura en Física — Actualmente en 2º año. Enfocado en métodos matemáticos, mecánica clásica y enfoques computacionales para sistemas físicos.</p>
           </div>
         </div>
 
@@ -261,8 +319,8 @@
           <div class="timeline__marker"></div>
           <div class="timeline__content">
             <span class="timeline__year">2026</span>
-            <h3 class="timeline__heading">Self-Directed Learning</h3>
-            <p class="timeline__desc">Expanding into quantum computing theory, machine learning fundamentals, and advanced C++ for scientific simulations.</p>
+            <h3 class="timeline__heading" data-en="Self-Directed Learning" data-es="Aprendizaje Autónomo">Aprendizaje Autónomo</h3>
+            <p class="timeline__desc" data-en="Expanding into quantum computing theory, machine learning fundamentals, and advanced C++ for scientific simulations." data-es="Ampliando conocimientos en teoría de computación cuántica, fundamentos de aprendizaje automático y C++ avanzado para simulaciones científicas.">Ampliando conocimientos en teoría de computación cuántica, fundamentos de aprendizaje automático y C++ avanzado para simulaciones científicas.</p>
           </div>
         </div>
 
@@ -270,51 +328,10 @@
     </div>
   </section>
 
-  <!-- Blog -->
-  <section class="section section--alt" id="blog">
-    <div class="container section__inner">
-      <h2 class="section__title" data-en="Blog" data-es="Blog">Blog</h2>
-      <div class="blog__grid">
 
-        <article class="blog-card">
-          <span class="blog-card__date">2026</span>
-          <h3 class="blog-card__title" data-en="Quantum Computing: A Beginner's Guide" data-es="Computación Cuántica: Guía para Principiantes">Computación Cuántica: Guía para Principiantes</h3>
-          <p class="blog-card__desc" data-en="An introduction to qubits, superposition, and quantum gates — explained for physics students." data-es="Una introducción a qubits, superposición y puertas cuánticas — explicado para estudiantes de física.">Una introducción a qubits, superposición y puertas cuánticas — explicado para estudiantes de física.</p>
-          <div class="blog-card__tags">
-            <span class="tag">Quantum</span>
-            <span class="tag">Physics</span>
-          </div>
-          <span class="blog-card__status" data-en="Coming Soon" data-es="Próximamente">Próximamente</span>
-        </article>
-
-        <article class="blog-card">
-          <span class="blog-card__date">2026</span>
-          <h3 class="blog-card__title" data-en="C++ for Scientific Simulations" data-es="C++ para Simulaciones Científicas">C++ para Simulaciones Científicas</h3>
-          <p class="blog-card__desc" data-en="Why C++ is the language of choice for computational physics and how to get started." data-es="Por qué C++ es el lenguaje preferido para la física computacional y cómo empezar.">Por qué C++ es el lenguaje preferido para la física computacional y cómo empezar.</p>
-          <div class="blog-card__tags">
-            <span class="tag">C++</span>
-            <span class="tag">Simulation</span>
-          </div>
-          <span class="blog-card__status" data-en="Coming Soon" data-es="Próximamente">Próximamente</span>
-        </article>
-
-        <article class="blog-card">
-          <span class="blog-card__date">2026</span>
-          <h3 class="blog-card__title" data-en="Machine Learning in Physics" data-es="Machine Learning en Física">Machine Learning en Física</h3>
-          <p class="blog-card__desc" data-en="How neural networks are revolutionizing particle physics and cosmology." data-es="Cómo las redes neuronales están revolucionando la física de partículas y la cosmología.">Cómo las redes neuronales están revolucionando la física de partículas y la cosmología.</p>
-          <div class="blog-card__tags">
-            <span class="tag">ML</span>
-            <span class="tag">Research</span>
-          </div>
-          <span class="blog-card__status" data-en="Coming Soon" data-es="Próximamente">Próximamente</span>
-        </article>
-
-      </div>
-    </div>
-  </section>
 
   <!-- Contact -->
-  <section class="section" id="contact">
+  <section class="section section--alt" id="contact">
     <div class="container section__inner">
       <h2 class="section__title" data-en="Contact" data-es="Contacto">Contacto</h2>
       <div class="contact__content">
@@ -322,11 +339,11 @@
         <div class="contact__links">
           <a href="https://github.com/MiniLux0" class="contact__link" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            GitHub
+            <span data-en="GitHub" data-es="GitHub">GitHub</span>
           </a>
           <a href="https://discord.com/users/minilux." class="contact__link" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-            Discord
+            <span data-en="Discord" data-es="Discord">Discord</span>
           </a>
         </div>
       </div>
@@ -336,8 +353,8 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
-      <p class="footer__tagline">Physics × Code × Curiosity</p>
-      <p class="footer__copy">&copy; 2026 Minilux. Alojado en GitHub Pages.</p>
+      <p class="footer__tagline" data-en="Physics × Code × Curiosity" data-es="Física × Código × Curiosidad">Física × Código × Curiosidad</p>
+      <p class="footer__copy" data-en="&copy; 2026 Minilux. Hosted on GitHub Pages." data-es="&copy; 2026 Minilux. Alojado en GitHub Pages.">&copy; 2026 Minilux. Alojado en GitHub Pages.</p>
       <span class="sr-only">Jesus Vera — Jesús Vera Vivanco — Minilux — MiniLux0</span>
     </div>
   </footer>

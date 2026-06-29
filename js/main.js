@@ -210,10 +210,10 @@
   // Physics/science messages for particle hover
   var MESSAGES = [
     'E = mc²', '∇×B = μ₀J', 'F = ma', 'ΔS ≥ 0',
-    'ψ(x,t)', 'Ĥ|ψ⟩ = E|ψ⟩', '∇²φ = -ρ/ε₀',
-    'λ = h/p', 'iℏ∂ψ/∂t', 'S = k·ln(W)',
-    'pV = nRT', 'F = -kx', 'Δx·Δp ≥ ℏ/2',
-    'dS/dt ≥ 0', '∇·E = ρ/ε₀', 'c = 3×10⁸',
+    'iℏ∂ψ/∂t = Ĥψ', 'F = q(E + v×B)', '∇·E = ρ/ε₀',
+    'd/dt(∂L/∂q̇) = ∂L/∂q', 'S = k_B ln Ω', 'Ĥ|ψ⟩ = E|ψ⟩',
+    '∇²φ = -ρ/ε₀', 'λ = h/p', 'pV = nRT', 'F = -kx',
+    'Δx·Δp ≥ ℏ/2', 'dS/dt ≥ 0', 'c = 3×10⁸',
   ];
   var hoveredParticle = null;
   var messageAlpha = 0;
@@ -293,6 +293,8 @@
       }
     }
 
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
     // Draw connections
     for (var i = 0; i < netParticles.length; i++) {
       for (var j = i + 1; j < netParticles.length; j++) {
@@ -304,7 +306,7 @@
           particleCtx.beginPath();
           particleCtx.moveTo(netParticles[i].x, netParticles[i].y);
           particleCtx.lineTo(netParticles[j].x, netParticles[j].y);
-          particleCtx.strokeStyle = 'rgba(59, 130, 246, ' + alpha + ')';
+          particleCtx.strokeStyle = isLight ? 'rgba(30, 64, 175, ' + (alpha * 1.8) + ')' : 'rgba(59, 130, 246, ' + alpha + ')';
           particleCtx.lineWidth = 0.6;
           particleCtx.stroke();
         }
@@ -319,9 +321,9 @@
       if (p.hoverAlpha > 0) {
         particleCtx.save();
         particleCtx.globalAlpha = p.hoverAlpha * 0.4;
-        particleCtx.shadowColor = '#3b82f6';
+        particleCtx.shadowColor = isLight ? '#1e40af' : '#3b82f6';
         particleCtx.shadowBlur = 15;
-        particleCtx.fillStyle = '#3b82f6';
+        particleCtx.fillStyle = isLight ? '#1e40af' : '#3b82f6';
         particleCtx.beginPath();
         particleCtx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
         particleCtx.fill();
@@ -331,7 +333,7 @@
       // Normal dot
       particleCtx.beginPath();
       particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      particleCtx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+      particleCtx.fillStyle = isLight ? 'rgba(30, 64, 175, 0.55)' : 'rgba(59, 130, 246, 0.35)';
       particleCtx.fill();
 
       // Message bubble
@@ -345,8 +347,8 @@
         var msgX = p.x - msgW / 2;
         var msgY = p.y - p.r - msgH - 6;
 
-        particleCtx.fillStyle = 'rgba(6, 10, 20, 0.85)';
-        particleCtx.shadowColor = '#3b82f6';
+        particleCtx.fillStyle = isLight ? 'rgba(238, 241, 246, 0.95)' : 'rgba(6, 10, 20, 0.85)';
+        particleCtx.shadowColor = isLight ? 'rgba(30, 64, 175, 0.3)' : '#3b82f6';
         particleCtx.shadowBlur = 8;
         particleCtx.beginPath();
         particleCtx.roundRect(msgX, msgY, msgW, msgH, 4);
@@ -354,12 +356,12 @@
 
         // Border
         particleCtx.shadowBlur = 0;
-        particleCtx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+        particleCtx.strokeStyle = isLight ? 'rgba(30, 64, 175, 0.4)' : 'rgba(59, 130, 246, 0.4)';
         particleCtx.lineWidth = 0.5;
         particleCtx.stroke();
 
         // Text
-        particleCtx.fillStyle = '#60a5fa';
+        particleCtx.fillStyle = isLight ? '#1e40af' : '#60a5fa';
         particleCtx.font = '11px "JetBrains Mono", monospace';
         particleCtx.textAlign = 'center';
         particleCtx.textBaseline = 'middle';
@@ -505,6 +507,8 @@
       var dt = 0.016;
       var t = time * 0.001;
 
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
       ctx.clearRect(0, 0, W, H);
 
       // ── Ambient particles ─────────────────────
@@ -515,8 +519,8 @@
         var flicker = 0.5 + 0.5 * Math.sin(t * 1.5 + ap.pulse);
         ctx.save();
         ctx.globalAlpha = ap.alpha * flicker;
-        ctx.fillStyle = '#3b82f6';
-        ctx.shadowColor = '#3b82f6';
+        ctx.fillStyle = isLight ? '#1e40af' : '#3b82f6';
+        ctx.shadowColor = isLight ? '#1e40af' : '#3b82f6';
         ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(ap.x, ap.y, ap.r, 0, Math.PI * 2);
@@ -544,12 +548,19 @@
 
       // ── Draw orbit paths ──────────────────────
       ORBITS.forEach(function (orb) {
+        var orbColor = orb.color;
+        if (isLight) {
+          if (orb.color === '#3b82f6') orbColor = '#1d4ed8';
+          else if (orb.color === '#38bdf8') orbColor = '#0369a1';
+          else if (orb.color === '#60a5fa') orbColor = '#1e3a8a';
+        }
+
         // Glow pass (wider, fainter)
         ctx.save();
-        ctx.strokeStyle = orb.color;
-        ctx.globalAlpha = 0.08;
+        ctx.strokeStyle = orbColor;
+        ctx.globalAlpha = isLight ? 0.12 : 0.08;
         ctx.lineWidth = 4;
-        ctx.shadowColor = orb.color;
+        ctx.shadowColor = orbColor;
         ctx.shadowBlur = 15;
         ctx.beginPath();
         for (var i = 0; i <= 120; i++) {
@@ -564,10 +575,10 @@
 
         // Crisp pass
         ctx.save();
-        ctx.strokeStyle = orb.color;
-        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = orbColor;
+        ctx.globalAlpha = isLight ? 0.45 : 0.3;
         ctx.lineWidth = 1;
-        ctx.shadowColor = orb.color;
+        ctx.shadowColor = orbColor;
         ctx.shadowBlur = 4;
         ctx.beginPath();
         for (var i = 0; i <= 120; i++) {
@@ -586,7 +597,7 @@
 
       electrons.forEach(function (e) {
         var speedNoise = Math.sin(t * e.speedVarFreq + e.seed) * e.speedVarAmp;
-        var angle = t * (e.baseSpeed + speedNoise) + e.offset;
+        var angle = t * e.baseSpeed + speedNoise + e.offset;
 
         var rPert = Math.sin(t * e.rPertFreq1 + e.seed * 1.3) * e.rPertAmp1
                   + Math.sin(t * e.rPertFreq2 + e.seed * 2.9) * e.rPertAmp2;
@@ -606,6 +617,14 @@
         var p3 = transformPoint(cx, cy, 0, e.rotX + wobbleX, e.rotZ + wobbleZ, rotX, rotY);
         var p2 = project(p3);
 
+        // Resolve electron color based on theme
+        var electronColor = e.color;
+        if (isLight) {
+          if (e.color === '#3b82f6') electronColor = '#1d4ed8';
+          else if (e.color === '#38bdf8') electronColor = '#0369a1';
+          else if (e.color === '#60a5fa') electronColor = '#1e3a8a';
+        }
+
         // Store trail
         e.trail.unshift({ x: p2.x, y: p2.y, z: p3.z });
         if (e.trail.length > TRAIL_LEN) e.trail.pop();
@@ -619,9 +638,9 @@
             var lw = 2.5 * (1 - frac * 0.6);
             ctx.save();
             ctx.globalAlpha = alpha;
-            ctx.strokeStyle = e.color;
+            ctx.strokeStyle = electronColor;
             ctx.lineWidth = lw;
-            ctx.shadowColor = e.color;
+            ctx.shadowColor = electronColor;
             ctx.shadowBlur = 6;
             ctx.lineCap = 'round';
             ctx.beginPath();
@@ -632,7 +651,7 @@
           }
         }
 
-        drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale, color: e.color });
+        drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale, color: electronColor });
       });
 
       // ── Nucleus ───────────────────────────────
@@ -649,26 +668,32 @@
       drawList.forEach(function (item) {
         if (item.type === 'nucleus') {
           var r = 8 * item.scale * item.r;
-          // Wide outer halo
-          drawGlowCircle(item.x, item.y, r * 5, '#1e40af', 60, 0.03);
-          // Outer glow
-          drawGlowCircle(item.x, item.y, r * 3.5, '#3b82f6', 45, 0.07);
-          // Mid glow
-          drawGlowCircle(item.x, item.y, r * 2.2, '#3b82f6', 30, 0.15);
-          // Inner glow
-          drawGlowCircle(item.x, item.y, r * 1.4, '#60a5fa', 18, 0.4);
-          // Core
-          drawGlowCircle(item.x, item.y, r, '#93c5fd', 12, 0.95);
-          // Hot center
-          drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.6);
+          if (isLight) {
+            drawGlowCircle(item.x, item.y, r * 5, '#1e3a8a', 60, 0.05);
+            drawGlowCircle(item.x, item.y, r * 3.5, '#1e40af', 45, 0.12);
+            drawGlowCircle(item.x, item.y, r * 2.2, '#2563eb', 30, 0.25);
+            drawGlowCircle(item.x, item.y, r * 1.4, '#3b82f6', 18, 0.5);
+            drawGlowCircle(item.x, item.y, r, '#60a5fa', 12, 0.95);
+            drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.8);
+          } else {
+            drawGlowCircle(item.x, item.y, r * 5, '#1e40af', 60, 0.03);
+            drawGlowCircle(item.x, item.y, r * 3.5, '#3b82f6', 45, 0.07);
+            drawGlowCircle(item.x, item.y, r * 2.2, '#3b82f6', 30, 0.15);
+            drawGlowCircle(item.x, item.y, r * 1.4, '#60a5fa', 18, 0.4);
+            drawGlowCircle(item.x, item.y, r, '#93c5fd', 12, 0.95);
+            drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.6);
+          }
         } else {
           var er = 3.5 * item.scale;
-          // Outer glow
-          drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.1);
-          // Mid glow
-          drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.25);
-          // Core
-          drawGlowCircle(item.x, item.y, er, '#ffffff', 8, 0.95);
+          if (isLight) {
+            drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.2);
+            drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.35);
+            drawGlowCircle(item.x, item.y, er, '#1e3a8a', 8, 0.95);
+          } else {
+            drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.1);
+            drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.25);
+            drawGlowCircle(item.x, item.y, er, '#ffffff', 8, 0.95);
+          }
         }
       });
 
@@ -694,19 +719,44 @@
         }
       });
 
-      requestAnimationFrame(render);
+      if (atomActive) {
+        requestAnimationFrame(render);
+      }
     }
 
-    requestAnimationFrame(render);
+    var atomActive = false;
+    var atomCanvas = document.getElementById('atom-canvas');
+    if (atomCanvas) {
+      var atomObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            if (!atomActive) {
+              atomActive = true;
+              requestAnimationFrame(render);
+            }
+          } else {
+            atomActive = false;
+          }
+        });
+      }, { threshold: 0.05 });
+      atomObserver.observe(atomCanvas);
+    } else {
+      atomActive = true;
+      requestAnimationFrame(render);
+    }
   })();
 
 
   // ============================================
   // Animation Loop (2D canvases)
   // ============================================
+  var heroActive = true;
+
   function animateAll(time) {
-    drawWave(time);
-    drawNetParticles();
+    if (heroActive) {
+      drawWave(time);
+      drawNetParticles();
+    }
     if (window._drawCursor) window._drawCursor(time);
     requestAnimationFrame(animateAll);
   }
@@ -718,9 +768,42 @@
       resizeWaveCanvas();
       resizeParticleCanvas();
     });
+
+    var heroSection = document.getElementById('hero');
+    if (heroSection) {
+      var heroObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          heroActive = entry.isIntersecting;
+        });
+      }, { threshold: 0.05 });
+      heroObserver.observe(heroSection);
+    }
     document.addEventListener('mousemove', function (e) {
       mouseX = e.clientX / window.innerWidth;
       mouseY = e.clientY / window.innerHeight;
+
+      // Parallax in the hero section (depth effect up to 15px)
+      var cx = e.clientX - window.innerWidth / 2;
+      var cy = e.clientY - window.innerHeight / 2;
+      var dx = cx / (window.innerWidth / 2);
+      var dy = cy / (window.innerHeight / 2);
+
+      var bgX = -15 * dx;
+      var bgY = -15 * dy;
+      var textX = -6 * dx;
+      var textY = -6 * dy;
+
+      var waveCanvas = document.getElementById('wave-canvas');
+      var particleCanvas = document.getElementById('particle-canvas');
+      var heroContent = document.querySelector('.hero__content');
+      var heroGrid = document.querySelector('.hero__grid');
+      var heroAurora = document.querySelector('.hero__aurora-wrap');
+
+      if (waveCanvas) waveCanvas.style.transform = 'translate(' + bgX + 'px, ' + bgY + 'px)';
+      if (particleCanvas) particleCanvas.style.transform = 'translate(' + bgX + 'px, ' + bgY + 'px)';
+      if (heroGrid) heroGrid.style.transform = 'translate(' + (bgX * 0.5) + 'px, ' + (bgY * 0.5) + 'px)';
+      if (heroAurora) heroAurora.style.transform = 'translate(' + (bgX * 0.8) + 'px, ' + (bgY * 0.8) + 'px)';
+      if (heroContent) heroContent.style.transform = 'translate(' + textX + 'px, ' + textY + 'px)';
     });
     animateAll(0);
   } else {
@@ -782,30 +865,54 @@
 
 
   // ============================================
-  // Mobile Nav Toggle
+  // Navigation Event Handling (Mobile toggle & smooth scroll)
   // ============================================
   var navToggle = document.getElementById('nav-toggle');
   var navLinks = document.querySelector('.nav__links');
+  var nav = document.getElementById('nav');
 
   if (navToggle && navLinks) {
     navToggle.addEventListener('click', function () {
       navToggle.classList.toggle('open');
       navLinks.classList.toggle('open');
     });
-    navLinks.querySelectorAll('.nav__link').forEach(function (link) {
-      link.addEventListener('click', function () {
-        navToggle.classList.remove('open');
-        navLinks.classList.remove('open');
-      });
-    });
   }
+
+  // Intercept navigation link clicks for uniform smooth scrolling
+  var navLinkEls = document.querySelectorAll('.nav__link');
+  navLinkEls.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var targetId = this.getAttribute('href');
+      if (targetId && targetId.startsWith('#')) {
+        e.preventDefault();
+        var targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          // Close mobile nav menu
+          if (navToggle && navLinks) {
+            navToggle.classList.remove('open');
+            navLinks.classList.remove('open');
+          }
+          // Scroll smoothly to target element minus nav height
+          var navHeight = nav ? nav.offsetHeight : 56;
+          var targetOffset = targetEl.offsetTop - navHeight;
+          window.scrollTo({
+            top: targetOffset,
+            behavior: 'smooth'
+          });
+          // Update URL hash without jumping
+          history.pushState(null, null, targetId);
+        }
+      }
+    });
+  });
 
 
   // ============================================
-  // Active Nav Highlight on Scroll
+  // Active Nav Highlight & Nav Frosted Glass on Scroll (Optimized)
   // ============================================
   var sections = document.querySelectorAll('.section, .hero');
   var navLinkEls = document.querySelectorAll('.nav__link');
+  var nav = document.getElementById('nav');
 
   function updateActiveNav() {
     var current = '';
@@ -819,22 +926,27 @@
     });
   }
 
-  window.addEventListener('scroll', updateActiveNav, { passive: true });
-  updateActiveNav();
-
-
-  // ============================================
-  // Nav Frosted Glass on Scroll
-  // ============================================
-  var nav = document.getElementById('nav');
-
   function updateNavBg() {
     if (!nav) return;
     if (window.scrollY > 50) nav.classList.add('scrolled');
     else nav.classList.remove('scrolled');
   }
 
-  window.addEventListener('scroll', updateNavBg, { passive: true });
+  // Combined scroll throttling using requestAnimationFrame
+  var scrollTicking = false;
+  function handleScroll() {
+    if (!scrollTicking) {
+      window.requestAnimationFrame(function () {
+        updateActiveNav();
+        updateNavBg();
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  updateActiveNav();
   updateNavBg();
 
 
@@ -902,24 +1014,33 @@
 
 
   // ============================================
-  // Loading Screen
+  // Loading Screen (Optimized delay)
   // ============================================
   var loader = document.getElementById('loader');
   if (loader) {
     window.addEventListener('load', function () {
       setTimeout(function () {
         loader.classList.add('hidden');
-      }, 1600);
+        // Reveal atom canvas after loader is completely faded out
+        setTimeout(function () {
+          var atomCanvas = document.getElementById('atom-canvas');
+          if (atomCanvas) atomCanvas.classList.add('reveal');
+        }, 600);
+      }, 500);
     });
     // Fallback: hide after 3s even if load event doesn't fire
     setTimeout(function () {
       loader.classList.add('hidden');
+      setTimeout(function () {
+        var atomCanvas = document.getElementById('atom-canvas');
+        if (atomCanvas) atomCanvas.classList.add('reveal');
+      }, 600);
     }, 3000);
   }
 
 
   // ============================================
-  // Bilingual Toggle (ES/EN)
+  // Bilingual Toggle (ES/EN - supports HTML content)
   // ============================================
   var langToggle = document.getElementById('lang-toggle');
   var langLabel = document.getElementById('lang-label');
@@ -927,7 +1048,7 @@
 
   // Apply Spanish on load
   document.querySelectorAll('[data-en][data-es]').forEach(function (el) {
-    el.textContent = el.getAttribute('data-es');
+    el.innerHTML = el.getAttribute('data-es');
   });
   if (langLabel) langLabel.textContent = 'EN';
   document.documentElement.lang = 'es';
@@ -938,7 +1059,7 @@
       if (langLabel) langLabel.textContent = currentLang === 'en' ? 'ES' : 'EN';
 
       document.querySelectorAll('[data-en][data-es]').forEach(function (el) {
-        el.textContent = el.getAttribute('data-' + currentLang);
+        el.innerHTML = el.getAttribute('data-' + currentLang);
       });
 
       document.documentElement.lang = currentLang;
@@ -1004,7 +1125,7 @@
     var blogObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
-          var cards = entry.target.querySelectorAll('.blog-card');
+          var cards = entry.target.querySelectorAll('.card');
           cards.forEach(function (card, index) {
             setTimeout(function () {
               card.style.opacity = '1';
@@ -1018,7 +1139,7 @@
 
     var blogGrid = document.querySelector('.blog__grid');
     if (blogGrid) {
-      document.querySelectorAll('.blog-card').forEach(function (card) {
+      blogGrid.querySelectorAll('.card').forEach(function (card) {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
         card.style.transition = 'opacity 0.6s, transform 0.6s';
