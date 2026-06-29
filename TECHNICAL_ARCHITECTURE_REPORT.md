@@ -90,18 +90,20 @@ El tema de la interfaz está completamente parametrizado. Los colores y fuentes 
 
 ```css
 :root {
-  --bg-deep:       #060a14;                   /* Fondo general del espacio profundo */
-  --bg-surface:    #0c1220;                   /* Fondo de tarjetas y secciones alternas */
-  --bg-elevated:   #111a2e;                   /* Fondo de elementos flotantes */
-  --bg-nav-mobile: rgba(6, 10, 20, 0.95);     /* Fondo del menú móvil en tema oscuro */
-  --text-primary:  #e8eaf0;                   /* Texto principal de alta legibilidad */
-  --text-muted:    #6b7d96;                   /* Texto secundario y descriptivo */
-  --accent:        #3b82f6;                   /* Color primario de énfasis (Azul CERN) */
-  --accent-hover:  #60a5fa;                   /* Enlace/botón hover */
-  --accent-glow:   rgba(59, 130, 246, 0.15);  /* Contenedores de resplandor */
-  --teal:          #14b8a6;                   /* Color secundario de énfasis (Teal cuántico) */
-  --border:        rgba(255, 255, 255, 0.06); /* Bordes base del espacio */
-  --border-accent: rgba(59, 130, 246, 0.15); /* Bordes activos con color */
+  --bg-deep:       #000000;                   /* Fondo general oscuro */
+  --bg-surface:    #0a0a0a;                   /* Fondo de tarjetas y secciones alternas */
+  --bg-elevated:   #141414;                   /* Fondo de elementos flotantes */
+  --bg-nav-mobile: rgba(0, 0, 0, 0.97);       /* Fondo del menú móvil en tema oscuro */
+  --text-primary:  #ffffff;                   /* Texto principal blanco */
+  --text-muted:    #6b6b6b;                   /* Texto secundario gris */
+  --accent:        #c0c0c0;                   /* Color primario de énfasis (Plata) */
+  --accent-hover:  #ffffff;                   /* Enlace/botón hover (Blanco) */
+  --accent-glow:   rgba(192, 192, 192, 0.1);  /* Contenedores de resplandor plata */
+  --teal:          #888888;                   /* Color secundario de énfasis (Gris medio) */
+  --teal-glow:     rgba(136, 136, 136, 0.1);  /* Resplandor gris secundario */
+  --border:        rgba(255, 255, 255, 0.08); /* Bordes base del espacio */
+  --border-hover:  rgba(255, 255, 255, 0.2);  /* Bordes activos al hacer hover */
+  --border-accent: rgba(192, 192, 192, 0.15); /* Bordes activos con acento plata */
   --font-display:  'Oxanium', sans-serif;
   --font-body:     'Inter', sans-serif;
   --font-mono:     'JetBrains Mono', monospace;
@@ -114,15 +116,18 @@ Cuando el documento tiene el atributo `[data-theme="light"]`, se sobrescriben la
 
 ```css
 [data-theme="light"] {
-  --bg-deep:       #f8f9fb;                   /* Fondo claro de laboratorio */
-  --bg-surface:    #eef1f6;                   /* Secciones y contenedores alternos */
+  --bg-deep:       #f5f5f5;                   /* Fondo claro de laboratorio */
+  --bg-surface:    #e5e5e5;                   /* Secciones y contenedores alternos */
   --bg-elevated:   #ffffff;                   /* Tarjetas e inputs */
-  --bg-nav-mobile: rgba(248, 249, 251, 0.95); /* Fondo del menú móvil en tema claro */
-  --text-primary:  #1a1d26;                   /* Texto oscuro */
-  --text-muted:    #5a6478;                   /* Texto secundario de contraste */
+  --bg-nav-mobile: rgba(245, 245, 245, 0.97); /* Fondo del menú móvil en tema claro */
+  --text-primary:  #0a0a0a;                   /* Texto oscuro */
+  --text-muted:    #777777;                   /* Texto secundario de contraste */
   --border:        rgba(0, 0, 0, 0.08);       /* Bordes grises sutiles */
-  --border-accent: rgba(59, 130, 246, 0.2);   /* Bordes con azul destacado */
-  --accent-glow:   rgba(59, 130, 246, 0.08);  /* Resplandores claros */
+  --border-hover:  rgba(0, 0, 0, 0.2);        /* Bordes activos en hover */
+  --border-accent: rgba(26, 26, 26, 0.15);    /* Bordes activos con acento oscuro */
+  --accent-glow:   rgba(26, 26, 26, 0.08);    /* Resplandores claros oscuros */
+  --teal:          #666666;                   /* Color secundario de énfasis claro */
+  --teal-glow:     rgba(102, 102, 102, 0.08);  /* Resplandor gris claro */
 }
 ```
 * **Propagación:** Los cambios del tema se inyectan en el DOM modificando el atributo `data-theme` del elemento `<html>`. Las hojas de estilo y las funciones de dibujo del Canvas escuchan este cambio para redibujar sus recursos de manera síncrona.
