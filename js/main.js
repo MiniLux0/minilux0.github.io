@@ -1098,7 +1098,11 @@
     cvBtn.addEventListener('click', function (e) {
       e.preventDefault();
       // Replace with actual CV file URL when ready
-      alert('¡CV próximamente! Contáctame en github.com/MiniLux0 por ahora.');
+      if (currentLang === 'en') {
+        alert('CV coming soon! Contact me at github.com/MiniLux0 for now.');
+      } else {
+        alert('¡CV próximamente! Contáctame en github.com/MiniLux0 por ahora.');
+      }
     });
   }
 
