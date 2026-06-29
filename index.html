@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú</title>
+  <meta name="description" content="Jesus Rodolfo Vera Vivanco, known as Minilux (MiniLux0), is a physics student at Universidad Nacional de Ingeniería (UNI), Lima, Perú, exploring computational physics, quantum computing, and machine learning through C++ and Python.">
+  <meta name="keywords" content="Minilux, MiniLux0, Jesus Vera, Jesus Vera Vivanco, Jesus Rodolfo Vera Vivanco, physics student Peru, computational physics Lima, quantum computing student, C++ physics, UNI Lima fisica, fisica computacional Peru, machine learning physics">
+  <meta name="author" content="Jesus Vera">
+  <link rel="canonical" href="https://minilux0.github.io">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú">
+  <meta property="og:description" content="Jesus Rodolfo Vera Vivanco, known as Minilux (MiniLux0), is a physics student at UNI Lima, Perú, exploring computational physics, quantum computing, and machine learning.">
+  <meta property="og:type" content="profile">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:url" content="https://minilux0.github.io">
+  <meta property="og:image" content="https://minilux0.github.io/og-image.png">
+  <meta property="og:site_name" content="Minilux Portfolio">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Minilux (MiniLux0) — Physics & Computational Science | UNI Lima Perú">
+  <meta name="twitter:description" content="Jesus Rodolfo Vera Vivanco, known as Minilux. Physics student at UNI Lima, Perú. Computational physics, quantum computing, machine learning.">
+  <meta name="twitter:image" content="https://minilux0.github.io/og-image.png">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Minilux",
+    "givenName": "Jesús",
+    "familyName": "Vera Vivanco",
+    "alternateName": ["MiniLux0", "Jesus Vera", "Jesus Rodolfo Vera Vivanco"],
+    "url": "https://minilux0.github.io",
+    "sameAs": ["https://github.com/MiniLux0"],
+    "jobTitle": "Physics Student",
+    "affiliation": {
+      "@type": "CollegeOrUniversity",
+      "name": "Universidad Nacional de Ingeniería",
+      "address": { "@type": "PostalAddress", "addressLocality": "Lima", "addressCountry": "PE" }
+    },
+    "knowsAbout": ["Computational Physics", "Quantum Computing", "Machine Learning", "C++", "LaTeX", "Python"]
+  }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <canvas id="cursor-canvas"></canvas>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <a href="#hero" class="nav__logo">M</a>
+    <ul class="nav__links">
+      <li><a href="#about" class="nav__link" data-section="about">About</a></li>
+      <li><a href="#projects" class="nav__link" data-section="projects">Projects</a></li>
+      <li><a href="#skills" class="nav__link" data-section="skills">Skills</a></li>
+      <li><a href="#education" class="nav__link" data-section="education">Education</a></li>
+      <li><a href="#contact" class="nav__link" data-section="contact">Contact</a></li>
+    </ul>
+    <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <canvas class="hero__canvas" id="wave-canvas"></canvas>
+    <canvas class="hero__particles" id="particle-canvas"></canvas>
+    <div class="hero__grid"></div>
+    <div class="hero__aurora"></div>
+    <div class="hero__content">
+      <p class="hero__greeting">Hello, I'm</p>
+      <h1 class="hero__name" data-text="Minilux">Minilux</h1>
+      <p class="hero__subtitle">Physics · Computational Science · Quantum Computing</p>
+      <a href="#projects" class="hero__cta">View Projects</a>
+    </div>
+    <div class="hero__scroll-hint">
+      <span>scroll</span>
+      <div class="hero__scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section" id="about">
+    <div class="container section__inner">
+      <h2 class="section__title">About</h2>
+      <div class="about__grid">
+        <div class="about__text">
+          <p>
+            I'm a physics student at <strong>Universidad Nacional de Ingeniería (UNI)</strong> in Lima, Perú,
+            driven by curiosity about the computational underpinnings of physical systems.
+          </p>
+          <p>
+            My interests sit at the intersection of <em>computational physics</em>, <em>quantum computing</em>,
+            and <em>machine learning</em> — exploring how algorithms can simulate, predict, and reveal
+            the behavior of complex systems.
+          </p>
+          <p>
+            I work primarily in <strong>C++</strong> for performance-critical simulations and use <strong>LaTeX</strong>
+            for scientific documentation and academic reports.
+          </p>
+        </div>
+        <div class="about__diagram">
+          <canvas id="atom-canvas"></canvas>
+          <div class="atom-labels" id="atom-labels">
+            <span class="atom-label" data-orbit="0">Computational Physics</span>
+            <span class="atom-label" data-orbit="1">Quantum Computing</span>
+            <span class="atom-label" data-orbit="2">Machine Learning</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section class="section section--alt" id="projects">
+    <div class="container section__inner">
+      <h2 class="section__title">Projects</h2>
+      <div class="projects__grid">
+
+        <article class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3 class="card__title">LearningCpp</h3>
+          <p class="card__desc">A structured repository documenting my journey learning C++ — from fundamentals to advanced topics like templates, memory management, and STL.</p>
+          <div class="card__tags">
+            <span class="tag">C++</span>
+            <span class="tag">Algorithms</span>
+            <span class="tag">OOP</span>
+          </div>
+          <a href="https://github.com/MiniLux0/LearningCpp" class="card__link" target="_blank" rel="noopener">
+            View on GitHub
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3 class="card__title">Physics-Reports</h3>
+          <p class="card__desc">Collection of academic reports and lab documentation written in LaTeX, covering mechanics, electromagnetism, and modern physics experiments.</p>
+          <div class="card__tags">
+            <span class="tag">LaTeX</span>
+            <span class="tag">Physics</span>
+            <span class="tag">Reports</span>
+          </div>
+          <a href="https://github.com/MiniLux0/Physics-Reports" class="card__link" target="_blank" rel="noopener">
+            View on GitHub
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </article>
+
+        <article class="card card--coming-soon">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          </div>
+          <h3 class="card__title">Quantum Computing</h3>
+          <p class="card__desc">Explorations in quantum algorithms, gate-based simulations, and quantum machine learning. Coming soon.</p>
+          <div class="card__tags">
+            <span class="tag">Quantum</span>
+            <span class="tag">Python</span>
+            <span class="tag">Coming Soon</span>
+          </div>
+          <span class="card__link card__link--disabled">
+            Coming Soon
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section class="section" id="skills">
+    <div class="container section__inner">
+      <h2 class="section__title">Skills</h2>
+      <div class="skills__groups">
+
+        <div class="skills__group">
+          <h3 class="skills__group-title">Languages</h3>
+          <div class="skills__tags">
+            <span class="skill-tag">C++</span>
+            <span class="skill-tag">Python <small>(coming soon)</small></span>
+            <span class="skill-tag">LaTeX</span>
+          </div>
+        </div>
+
+        <div class="skills__group">
+          <h3 class="skills__group-title">Tools</h3>
+          <div class="skills__tags">
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">VSCode</span>
+            <span class="skill-tag">Linux</span>
+          </div>
+        </div>
+
+        <div class="skills__group">
+          <h3 class="skills__group-title">Domains</h3>
+          <div class="skills__tags">
+            <span class="skill-tag">Computational Physics</span>
+            <span class="skill-tag">Quantum Computing</span>
+            <span class="skill-tag">Machine Learning</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Education / Timeline -->
+  <section class="section section--alt" id="education">
+    <div class="container section__inner">
+      <h2 class="section__title">Education</h2>
+      <div class="timeline">
+
+        <div class="timeline__item">
+          <div class="timeline__marker"></div>
+          <div class="timeline__content">
+            <span class="timeline__year">2024 — Present</span>
+            <h3 class="timeline__heading">Universidad Nacional de Ingeniería (UNI)</h3>
+            <p class="timeline__location">Lima, Perú</p>
+            <p class="timeline__desc">B.Sc. in Physics — Currently in 2nd year. Focused on mathematical methods, classical mechanics, and computational approaches to physical systems.</p>
+          </div>
+        </div>
+
+        <div class="timeline__item">
+          <div class="timeline__marker"></div>
+          <div class="timeline__content">
+            <span class="timeline__year">2026</span>
+            <h3 class="timeline__heading">Self-Directed Learning</h3>
+            <p class="timeline__desc">Expanding into quantum computing theory, machine learning fundamentals, and advanced C++ for scientific simulations.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="section" id="contact">
+    <div class="container section__inner">
+      <h2 class="section__title">Contact</h2>
+      <div class="contact__content">
+        <p class="contact__text">Interested in collaborating on physics simulations, open-source projects, or just want to connect?</p>
+        <div class="contact__links">
+          <a href="https://github.com/MiniLux0" class="contact__link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </a>
+          <a href="https://discord.com/users/minilux." class="contact__link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            Discord
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer__tagline">Physics × Code × Curiosity</p>
+      <p class="footer__copy">&copy; 2026 Minilux. Hosted on GitHub Pages.</p>
+      <span class="sr-only">Jesus Vera — Jesús Vera Vivanco — Minilux — MiniLux0</span>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top -->
+  <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
