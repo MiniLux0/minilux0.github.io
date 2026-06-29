@@ -362,7 +362,6 @@
         particleCtx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.4)' : 'rgba(192, 192, 192, 0.4)';
         particleCtx.lineWidth = 0.5;
         particleCtx.stroke();
-
         // Text
         particleCtx.fillStyle = isLight ? '#1a1a1a' : '#ffffff';
         particleCtx.font = '11px "JetBrains Mono", monospace';
@@ -374,7 +373,6 @@
       }
     }
   }
-
 
   // ============================================
   // 3D Atom — Pure Canvas 2D (Enhanced)
@@ -391,16 +389,17 @@
     canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    var TRAIL_LEN = 30;       // Longer trails
     var CAM_DIST  = 6;
     var FOV       = 3.5;
     var AMBIENT_N = 40;       // Background ambient particles
 
-    // Orbit configs
+    // Orbit configs: 5 orbits with distinct tilts in X, Y, Z
     var ORBITS = [
-      { rx: 1.5, ry: 1.35, rotX: 0.2,            rotZ: 0,            speed: 0.40, color: '#c0c0c0' },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI / 3,     rotZ: Math.PI / 6,  speed: 0.55, color: '#888888' },
-      { rx: 1.5, ry: 1.35, rotX: Math.PI * 2 / 3, rotZ: -Math.PI / 5, speed: 0.35, color: '#a8a8a8' },
+      { rx: 1.5, ry: 1.3, rotX: 0.15,            rotZ: 0,            speed: 0.35 }, // Orbit 1
+      { rx: 1.5, ry: 1.3, rotX: Math.PI / 4,     rotZ: Math.PI / 5,  speed: 0.50 }, // Orbit 2
+      { rx: 1.5, ry: 1.3, rotX: Math.PI / 2.2,   rotZ: -Math.PI / 4, speed: 0.40 }, // Orbit 3
+      { rx: 1.5, ry: 1.3, rotX: Math.PI * 3 / 4, rotZ: Math.PI / 3,  speed: 0.45 }, // Orbit 4
+      { rx: 1.5, ry: 1.3, rotX: Math.PI / 6,     rotZ: -Math.PI / 3, speed: 0.30 }, // Orbit 5
     ];
 
     // Ambient floating particles
@@ -415,24 +414,25 @@
       });
     }
 
-    // Electrons: 3 per orbit
+    // Electrons: distribution per orbit (1, 1, 2, 1, 2)
     var electrons = [];
+    var eDistribution = [1, 1, 2, 1, 2];
     ORBITS.forEach(function (cfg, oi) {
-      for (var e = 0; e < 3; e++) {
+      var count = eDistribution[oi];
+      for (var e = 0; e < count; e++) {
         var seed = oi * 100 + e * 37 + 13;
         electrons.push({
           rx: cfg.rx, ry: cfg.ry,
           rotX: cfg.rotX, rotZ: cfg.rotZ,
           baseSpeed: cfg.speed,
-          offset: (e / 3) * Math.PI * 2,
-          seed: seed, color: cfg.color,
+          offset: (e / count) * Math.PI * 2 + seed * 0.1, // unique phase
+          seed: seed,
           rPertFreq1: 0.7 + Math.random() * 0.6,
           rPertAmp1:  0.08 + Math.random() * 0.07,
           rPertFreq2: 1.3 + Math.random() * 0.8,
           rPertAmp2:  0.04 + Math.random() * 0.04,
           speedVarFreq: 0.5 + Math.random() * 0.4,
           speedVarAmp:  0.12 + Math.random() * 0.08,
-          trailFlicker: 0.8 + Math.random() * 0.4,
           trail: [],
         });
       }
@@ -444,6 +444,14 @@
     var dragActive = false, dragSX = 0, dragSY = 0;
     var mouseX = 0, mouseY = 0;
     var pulseTime = -1, PULSE_DUR = 1.2;
+
+    // Hover extra rotation (X and Y max ±0.25 rad with 0.04 lerp)
+    var extraRotX = 0, extraRotY = 0;
+    var targetExtraRotX = 0, targetExtraRotY = 0;
+
+    // Expanding shockwaves (emitted every 4 seconds)
+    var shockwaves = [];
+    var shockwaveTimer = 0;
 
     // ── 3D math helpers ─────────────────────────
     function rotateX(p, a) {
@@ -492,6 +500,21 @@
     document.addEventListener('mouseup', function () { dragActive = false; });
     canvas.addEventListener('click', function () { if (pulseTime < 0) pulseTime = 0; });
 
+    // Track cursor offset from canvas center for hover tilt (max ±0.25 rad)
+    canvas.addEventListener('mousemove', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = (e.clientX - rect.left) - rect.width / 2;
+      var my = (e.clientY - rect.top) - rect.height / 2;
+      var ndx = mx / (rect.width / 2);
+      var ndy = my / (rect.height / 2);
+      targetExtraRotY = ndx * 0.25;
+      targetExtraRotX = -ndy * 0.25;
+    });
+    canvas.addEventListener('mouseleave', function () {
+      targetExtraRotX = 0;
+      targetExtraRotY = 0;
+    });
+
     // ── Draw helpers ────────────────────────────
     function drawGlowCircle(x, y, r, color, glowR, alpha) {
       ctx.save();
@@ -511,6 +534,8 @@
       var t = time * 0.001;
 
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var atomRGB = isLight ? '26, 26, 26' : '255, 255, 255';
+      var coreColor = isLight ? '#000000' : '#ffffff';
 
       ctx.clearRect(0, 0, W, H);
 
@@ -540,7 +565,7 @@
         pulseScale = 1 + 0.25 * Math.sin(pp * Math.PI) * (1 - pp);
       }
 
-      // Smooth rotation
+      // Smooth rotation & hover tilt lerp
       targetRotY += 0.003;
       if (!dragActive) {
         targetRotX += (mouseY * 0.15 - targetRotX) * 0.02;
@@ -549,28 +574,38 @@
       rotX += (targetRotX - rotX) * 0.06;
       rotY += (targetRotY - rotY) * 0.06;
 
+      extraRotX += (targetExtraRotX - extraRotX) * 0.04;
+      extraRotY += (targetExtraRotY - extraRotY) * 0.04;
+
+      var currentRotX = rotX + extraRotX;
+      var currentRotY = rotY + extraRotY;
+
+      // ── Update Shockwaves ─────────────────────
+      shockwaveTimer += dt;
+      if (shockwaveTimer >= 4.0) {
+        shockwaves.push({ age: 0 });
+        shockwaveTimer = 0;
+      }
+      shockwaves.forEach(function (wave) {
+        wave.age += dt;
+      });
+      shockwaves = shockwaves.filter(function (wave) {
+        return wave.age <= 0.8;
+      });
+
       // ── Draw orbit paths ──────────────────────
       ORBITS.forEach(function (orb) {
-        var orbColor = orb.color;
-        if (isLight) {
-          if (orb.color === '#c0c0c0') orbColor = '#1a1a1a';
-          else if (orb.color === '#888888') orbColor = '#444444';
-          else if (orb.color === '#a8a8a8') orbColor = '#333333';
-        }
-
-        // Glow pass (wider, fainter)
+        // Glow pass
         ctx.save();
-        ctx.strokeStyle = orbColor;
-        ctx.globalAlpha = isLight ? 0.12 : 0.08;
+        ctx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.08)' : 'rgba(255, 255, 255, 0.08)';
+        ctx.globalAlpha = 1.0;
         ctx.lineWidth = 4;
-        ctx.shadowColor = orbColor;
-        ctx.shadowBlur = 15;
         ctx.beginPath();
         for (var i = 0; i <= 120; i++) {
           var a = (i / 120) * Math.PI * 2;
           var px = Math.cos(a) * orb.rx * pulseScale;
           var py = Math.sin(a) * orb.ry * pulseScale;
-          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, rotX, rotY);
+          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, currentRotX, currentRotY);
           var p2 = project(p3);
           if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
         }
@@ -578,17 +613,15 @@
 
         // Crisp pass
         ctx.save();
-        ctx.strokeStyle = orbColor;
-        ctx.globalAlpha = isLight ? 0.45 : 0.3;
+        ctx.strokeStyle = isLight ? 'rgba(26, 26, 26, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+        ctx.globalAlpha = 1.0;
         ctx.lineWidth = 1;
-        ctx.shadowColor = orbColor;
-        ctx.shadowBlur = 4;
         ctx.beginPath();
         for (var i = 0; i <= 120; i++) {
           var a = (i / 120) * Math.PI * 2;
           var px = Math.cos(a) * orb.rx * pulseScale;
           var py = Math.sin(a) * orb.ry * pulseScale;
-          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, rotX, rotY);
+          var p3 = transformPoint(px, py, 0, orb.rotX, orb.rotZ, currentRotX, currentRotY);
           var p2 = project(p3);
           if (i === 0) ctx.moveTo(p2.x, p2.y); else ctx.lineTo(p2.x, p2.y);
         }
@@ -617,50 +650,38 @@
         var wobbleX = Math.sin(t * 0.3 + e.seed * 0.01) * 0.04;
         var wobbleZ = Math.cos(t * 0.25 + e.seed * 0.015) * 0.03;
 
-        var p3 = transformPoint(cx, cy, 0, e.rotX + wobbleX, e.rotZ + wobbleZ, rotX, rotY);
+        var p3 = transformPoint(cx, cy, 0, e.rotX + wobbleX, e.rotZ + wobbleZ, currentRotX, currentRotY);
         var p2 = project(p3);
 
-        // Resolve electron color based on theme
-        var electronColor = e.color;
-        if (isLight) {
-          if (e.color === '#c0c0c0') electronColor = '#1a1a1a';
-          else if (e.color === '#888888') electronColor = '#444444';
-          else if (e.color === '#a8a8a8') electronColor = '#333333';
-        }
+        // Store projected 2D trail (keep last 14 coordinates)
+        e.trail.unshift({ x: p2.x, y: p2.y });
+        if (e.trail.length > 14) e.trail.pop();
 
-        // Store trail
-        e.trail.unshift({ x: p2.x, y: p2.y, z: p3.z });
-        if (e.trail.length > TRAIL_LEN) e.trail.pop();
-
-        // Draw trail with smooth curve + exponential decay
-        if (e.trail.length > 2) {
+        // Draw trail segment lines with custom width/opacity ranges
+        if (e.trail.length > 1) {
           for (var i = 1; i < e.trail.length; i++) {
-            var frac = i / TRAIL_LEN;
-            var alpha = Math.exp(-frac * 2.8) * 0.7 * e.trailFlicker;
-            if (alpha < 0.005) continue;
-            var lw = 2.5 * (1 - frac * 0.6);
+            var frac = i / 14;
+            var opacity = 0.45 * (1 - frac);
+            var width = 0.4 + 1.4 * (1 - frac);
             ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.strokeStyle = electronColor;
-            ctx.lineWidth = lw;
-            ctx.shadowColor = electronColor;
-            ctx.shadowBlur = 6;
-            ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(e.trail[i - 1].x, e.trail[i - 1].y);
             ctx.lineTo(e.trail[i].x, e.trail[i].y);
+            ctx.strokeStyle = 'rgba(' + atomRGB + ', ' + opacity + ')';
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
             ctx.stroke();
             ctx.restore();
           }
         }
 
-        drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale, color: electronColor });
+        drawList.push({ type: 'electron', x: p2.x, y: p2.y, z: p3.z, scale: p2.scale });
       });
 
       // ── Nucleus ───────────────────────────────
       var nucPulse = 1 + Math.sin(t * 2) * 0.04 + Math.sin(t * 5.3) * 0.01;
       var nucScale = nucPulse * pulseScale;
-      var nuc3 = rotateY(rotateX({ x: 0, y: 0, z: 0 }, rotX), rotY);
+      var nuc3 = rotateY(rotateX({ x: 0, y: 0, z: 0 }, currentRotX), currentRotY);
       var nuc2 = project(nuc3);
       drawList.push({ type: 'nucleus', x: nuc2.x, y: nuc2.y, z: nuc3.z, scale: nuc2.scale, r: nucScale });
 
@@ -671,32 +692,54 @@
       drawList.forEach(function (item) {
         if (item.type === 'nucleus') {
           var r = 8 * item.scale * item.r;
-          if (isLight) {
-            drawGlowCircle(item.x, item.y, r * 5, '#1e3a8a', 60, 0.05);
-            drawGlowCircle(item.x, item.y, r * 3.5, '#1e40af', 45, 0.12);
-            drawGlowCircle(item.x, item.y, r * 2.2, '#2563eb', 30, 0.25);
-            drawGlowCircle(item.x, item.y, r * 1.4, '#3b82f6', 18, 0.5);
-            drawGlowCircle(item.x, item.y, r, '#60a5fa', 12, 0.95);
-            drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.8);
-          } else {
-            drawGlowCircle(item.x, item.y, r * 5, '#1e40af', 60, 0.03);
-            drawGlowCircle(item.x, item.y, r * 3.5, '#3b82f6', 45, 0.07);
-            drawGlowCircle(item.x, item.y, r * 2.2, '#3b82f6', 30, 0.15);
-            drawGlowCircle(item.x, item.y, r * 1.4, '#60a5fa', 18, 0.4);
-            drawGlowCircle(item.x, item.y, r, '#93c5fd', 12, 0.95);
-            drawGlowCircle(item.x, item.y, r * 0.5, '#ffffff', 8, 0.6);
-          }
-        } else {
-          var er = 3.5 * item.scale;
-          if (isLight) {
-            drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.2);
-            drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.35);
-            drawGlowCircle(item.x, item.y, er, '#1a1a1a', 8, 0.95);
-          } else {
-            drawGlowCircle(item.x, item.y, er * 3, item.color, 16, 0.1);
-            drawGlowCircle(item.x, item.y, er * 1.8, item.color, 10, 0.25);
-            drawGlowCircle(item.x, item.y, er, '#c0c0c0', 8, 0.95);
-          }
+
+          // Halo exterior: 14px to 22px
+          var rOuter = (18 + 4 * Math.sin(t * 1.5)) * item.scale;
+          // Halo medio: 9px to 14px
+          var rMid = (11.5 + 2.5 * Math.sin(t * 2.0 + 1)) * item.scale;
+          // Nucleo sólido: 5px
+          var rCore = 5 * item.scale;
+
+          drawGlowCircle(item.x, item.y, rOuter, 'rgba(' + atomRGB + ', 0.06)', 12 * item.scale, 1.0);
+          drawGlowCircle(item.x, item.y, rMid, 'rgba(' + atomRGB + ', 0.15)', 8 * item.scale, 1.0);
+          drawGlowCircle(item.x, item.y, rCore, coreColor, 4 * item.scale, 1.0);
+
+          // Destello: 2px offset at (+2, -2) from center
+          drawGlowCircle(item.x + 2 * item.scale, item.y - 2 * item.scale, 2 * item.scale, 'rgba(' + atomRGB + ', 0.9)', 0, 1.0);
+
+          // Render active expanding shockwaves
+          shockwaves.forEach(function (wave) {
+            var progress = wave.age / 0.8;
+            var rWave = progress * 90 * item.scale;
+            var waveOpacity = 0.35 * (1 - progress);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(item.x, item.y, rWave, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(' + atomRGB + ', ' + waveOpacity + ')';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+            ctx.restore();
+          });
+
+        } else if (item.type === 'electron') {
+          var rOuter = 4 * item.scale;
+          var rInner = 2 * item.scale;
+
+          // Outer circle
+          ctx.save();
+          ctx.fillStyle = 'rgba(' + atomRGB + ', 0.3)';
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, rOuter, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // Inner solid circle
+          ctx.save();
+          ctx.fillStyle = coreColor;
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, rInner, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
       });
 
@@ -712,7 +755,7 @@
         var oc = ORBITS[ld.orbit];
         var lx = Math.cos(ld.angle) * oc.rx;
         var ly = Math.sin(ld.angle) * oc.ry;
-        var p3 = transformPoint(lx, ly, 0, oc.rotX, oc.rotZ, rotX, rotY);
+        var p3 = transformPoint(lx, ly, 0, oc.rotX, oc.rotZ, currentRotX, currentRotY);
         var p2 = project(p3);
         var depthAlpha = Math.max(0.2, Math.min(1, 1 - p3.z * 0.25));
         if (!isNaN(p2.x) && !isNaN(p2.y)) {
@@ -747,11 +790,6 @@
       atomActive = true;
       requestAnimationFrame(render);
     }
-  })();
-
-
-  // ============================================
-  // Animation Loop (2D canvases)
   // ============================================
   var heroActive = true;
 
