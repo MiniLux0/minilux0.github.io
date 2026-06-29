@@ -790,4 +790,124 @@
     });
   }
 
+
+  // ============================================
+  // Loading Screen
+  // ============================================
+  var loader = document.getElementById('loader');
+  if (loader) {
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        loader.classList.add('hidden');
+      }, 1600);
+    });
+    // Fallback: hide after 3s even if load event doesn't fire
+    setTimeout(function () {
+      loader.classList.add('hidden');
+    }, 3000);
+  }
+
+
+  // ============================================
+  // Bilingual Toggle (ES/EN)
+  // ============================================
+  var langToggle = document.getElementById('lang-toggle');
+  var langLabel = document.getElementById('lang-label');
+  var currentLang = 'en';
+
+  if (langToggle) {
+    langToggle.addEventListener('click', function () {
+      currentLang = currentLang === 'en' ? 'es' : 'en';
+      if (langLabel) langLabel.textContent = currentLang === 'en' ? 'ES' : 'EN';
+
+      document.querySelectorAll('[data-en][data-es]').forEach(function (el) {
+        el.textContent = el.getAttribute('data-' + currentLang);
+      });
+
+      document.documentElement.lang = currentLang;
+    });
+  }
+
+
+  // ============================================
+  // Theme Toggle (Dark/Light)
+  // ============================================
+  var themeToggle = document.getElementById('theme-toggle');
+  var iconDark = document.getElementById('theme-icon-dark');
+  var iconLight = document.getElementById('theme-icon-light');
+  var savedTheme = localStorage.getItem('theme') || 'dark';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (iconDark && iconLight) {
+      iconDark.style.display = theme === 'dark' ? 'block' : 'none';
+      iconLight.style.display = theme === 'light' ? 'block' : 'none';
+    }
+    localStorage.setItem('theme', theme);
+  }
+
+  applyTheme(savedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var current = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  }
+
+
+  // ============================================
+  // Mobile Canvas Optimization
+  // ============================================
+  if (isCoarsePointer) {
+    // Hide cursor canvas on touch devices
+    if (cursorCanvas) cursorCanvas.style.display = 'none';
+    // Reduce particle count for performance
+    PARTICLE_COUNT = 20;
+  }
+
+
+  // ============================================
+  // CV Download (placeholder alert)
+  // ============================================
+  var cvBtn = document.getElementById('cv-download');
+  if (cvBtn) {
+    cvBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      // Replace with actual CV file URL when ready
+      alert('CV download coming soon! Contact me at github.com/MiniLux0 for now.');
+    });
+  }
+
+
+  // ============================================
+  // Blog Card Reveal Animation
+  // ============================================
+  if (!prefersReducedMotion) {
+    var blogObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var cards = entry.target.querySelectorAll('.blog-card');
+          cards.forEach(function (card, index) {
+            setTimeout(function () {
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, index * 120);
+          });
+          blogObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    var blogGrid = document.querySelector('.blog__grid');
+    if (blogGrid) {
+      document.querySelectorAll('.blog-card').forEach(function (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s, transform 0.6s';
+      });
+      blogObserver.observe(blogGrid);
+    }
+  }
+
 })();
