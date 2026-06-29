@@ -361,3 +361,18 @@ export function update(time) {
 
   composer.render();
 }
+
+// ── Self-bootstrap: start animation loop on module load ──
+(function boot() {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  init();
+  if (!reduced && renderer) {
+    (function loop(t) {
+      update(t);
+      requestAnimationFrame(loop);
+    })(0);
+  } else if (renderer) {
+    // Single static frame for reduced-motion
+    update(0);
+  }
+})();
