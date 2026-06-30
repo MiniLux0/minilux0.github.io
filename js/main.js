@@ -11,6 +11,8 @@
   var heroMouseX = 0, heroMouseY = 0;
   var heroTargetX = 0, heroTargetY = 0;
   var isMobile = (window.innerWidth < 768) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  var heroTime = 0;
+  var lastHeroTime = null;
 
   // ============================================
   // Custom Cursor — Canvas Particle Trail
@@ -256,7 +258,7 @@
     }
   }
 
-  function drawNetParticles() {
+  function drawNetParticles(t) {
     if (!particleCtx) return;
     particleCtx.clearRect(0, 0, pWidth, pHeight);
 
@@ -270,7 +272,6 @@
     var minDist = CURSOR_RADIUS;
 
     var speedMult = 1 + heroMouseX * 0.3;
-    var t = performance.now() * 0.001;
 
     for (var i = 0; i < netParticles.length; i++) {
       var p = netParticles[i];
@@ -757,6 +758,14 @@
   var heroActive = true;
 
   function animateAll(time) {
+    if (lastHeroTime === null) {
+      lastHeroTime = time;
+    }
+    var dt = (time - lastHeroTime) * 0.001;
+    lastHeroTime = time;
+    dt = Math.min(dt, 0.032);
+    heroTime += dt;
+
     if (heroActive) {
       // Lerp hero parallax at 6%
       heroMouseX += (heroTargetX - heroMouseX) * 0.06;
@@ -777,9 +786,9 @@
       }
 
       if (!isMobile) {
-        drawWave(time);
+        drawWave(heroTime * 1000);
       }
-      drawNetParticles();
+      drawNetParticles(heroTime);
     }
     if (window._drawCursor) window._drawCursor(time);
     requestAnimationFrame(animateAll);
@@ -1173,5 +1182,11 @@
     // Start typing after a short delay
     typingTimer = setTimeout(typeNext, 800);
   }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) {
+      lastHeroTime = null;
+    }
+  });
 
 })();
