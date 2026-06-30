@@ -31,6 +31,11 @@
   --nav-h:         3.5rem;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: var(--nav-h);
@@ -42,7 +47,6 @@ body {
   color: var(--text-primary);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
   cursor: none;
 }
 
@@ -511,6 +515,8 @@ em { font-style: normal; color: var(--accent); }
   margin-bottom: 1.25rem;
   color: var(--accent);
   font-size: 1.025rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .about__text p:last-child {
   margin-bottom: 0;
@@ -1390,12 +1396,17 @@ em { font-style: normal; color: var(--accent); }
   }
 
   .about__grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 2.5rem;
   }
   .about__diagram {
-    order: -1;
-    transform: scale(0.7);
+    margin: 0 auto;
+  }
+  #atom-canvas {
+    max-width: 300px;
+    height: 300px;
+    margin: 0 auto;
   }
 
   .hero__aurora {

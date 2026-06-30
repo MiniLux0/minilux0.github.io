@@ -10,6 +10,7 @@
   var typingTimer = null;
   var heroMouseX = 0, heroMouseY = 0;
   var heroTargetX = 0, heroTargetY = 0;
+  var isMobile = (window.innerWidth < 768) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   // ============================================
   // Custom Cursor — Canvas Particle Trail
@@ -130,11 +131,14 @@
   // ============================================
   var waveCanvas = document.getElementById('wave-canvas');
   var waveCtx = waveCanvas ? waveCanvas.getContext('2d') : null;
+  if (isMobile && waveCanvas) {
+    waveCanvas.style.display = 'none';
+  }
   var wWidth, wHeight, wDpr;
   var mouseX = 0.5, mouseY = 0.5;
 
   function resizeWaveCanvas() {
-    if (!waveCanvas || !waveCtx) return;
+    if (!waveCanvas || !waveCtx || isMobile) return;
     wDpr = Math.min(window.devicePixelRatio || 1, 2);
     wWidth = waveCanvas.clientWidth;
     wHeight = waveCanvas.clientHeight;
@@ -207,7 +211,7 @@
   var particleCtx = particleCanvas ? particleCanvas.getContext('2d') : null;
   var pWidth, pHeight, pDpr;
   var netParticles = [];
-  var PARTICLE_COUNT = 60;
+  var PARTICLE_COUNT = isMobile ? 24 : 60;
   var CONNECTION_DIST = 112;
   var MAX_SPEED = 0.5;   // Maximum particle speed
   var CURSOR_RADIUS = 40; // Distance to trigger message
@@ -488,12 +492,22 @@
 
     var lastTime = null;
 
+    function scheduleNextFrame() {
+      if (isMobile) {
+        setTimeout(function () {
+          requestAnimationFrame(render);
+        }, 1000 / 30);
+      } else {
+        requestAnimationFrame(render);
+      }
+    }
+
     // ── Main render loop ────────────────────────
     function render(time) {
       if (lastTime === null) {
         lastTime = time;
         if (atomActive) {
-          requestAnimationFrame(render);
+          scheduleNextFrame();
         }
         return;
       }
@@ -692,7 +706,7 @@
       });
 
       if (atomActive) {
-        requestAnimationFrame(render);
+        scheduleNextFrame();
       }
     }
 
@@ -705,7 +719,7 @@
             if (!atomActive) {
               atomActive = true;
               lastTime = null;
-              requestAnimationFrame(render);
+              scheduleNextFrame();
             }
           } else {
             atomActive = false;
@@ -715,7 +729,7 @@
       atomObserver.observe(atomCanvas);
     } else {
       atomActive = true;
-      requestAnimationFrame(render);
+      scheduleNextFrame();
     }
 
     // Tab visibility change reset handler
@@ -729,11 +743,11 @@
           var isVisible = (rect.top < window.innerHeight && rect.bottom > 0);
           if (isVisible && !atomActive) {
             atomActive = true;
-            requestAnimationFrame(render);
+            scheduleNextFrame();
           }
         } else if (!atomActive) {
           atomActive = true;
-          requestAnimationFrame(render);
+          scheduleNextFrame();
         }
       }
     });
@@ -758,11 +772,13 @@
       if (heroSubtitle) {
         heroSubtitle.style.transform = 'translate(' + (heroMouseX * -8) + 'px, ' + (heroMouseY * -6) + 'px)';
       }
-      if (waveCanvasEl) {
+      if (waveCanvasEl && !isMobile) {
         waveCanvasEl.style.transform = 'translate(' + (heroMouseX * 20) + 'px, ' + (heroMouseY * 12) + 'px)';
       }
 
-      drawWave(time);
+      if (!isMobile) {
+        drawWave(time);
+      }
       drawNetParticles();
     }
     if (window._drawCursor) window._drawCursor(time);
@@ -1067,11 +1083,9 @@
   // ============================================
   // Mobile Canvas Optimization
   // ============================================
-  if (isCoarsePointer) {
+  if (isCoarsePointer || isMobile) {
     // Hide cursor canvas on touch devices
     if (cursorCanvas) cursorCanvas.style.display = 'none';
-    // Reduce particle count for performance
-    PARTICLE_COUNT = 20;
   }
 
 
