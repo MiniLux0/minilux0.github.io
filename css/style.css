@@ -577,6 +577,22 @@ em { font-style: normal; color: var(--accent); }
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
 }
 
+.atom-label .label-short {
+  display: none;
+}
+.atom-label .label-full {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .atom-label .label-full {
+    display: none;
+  }
+  .atom-label .label-short {
+    display: inline;
+  }
+}
+
 /* Nucleus center label */
 .atom-label--nucleus {
   position: absolute;
